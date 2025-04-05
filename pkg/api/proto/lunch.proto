@@ -2,10 +2,10 @@ syntax = "proto3";
 
 option go_package = "t-lunch-backend/pkg/api/generated;tlunch";
 
-package tlunch;
-
 import "google/annotations.proto";
 import "google/timestamp.proto";
+
+package tlunch;
 
 service Tlunch {
     // TODO: registration
@@ -25,7 +25,7 @@ service Tlunch {
         };
     }
 
-    rpc GetLunches (UserRequest) returns (GetLunchesResponse) {
+    rpc GetLunches (LunchRequest) returns (GetLunchesResponse) {
         option (google.api.http) = {
             get: "/v1/lunches"
         };
@@ -58,7 +58,7 @@ service Tlunch {
         };
     }
 
-    rpc GetLunchHistory (UserRequest) returns (LunchHistoryResponse) {
+    rpc GetLunchHistory (LunchRequest) returns (LunchHistoryResponse) {
         option (google.api.http) = {
             get: "/v1/lunch/{user_id}/history"
         };
@@ -73,7 +73,7 @@ service Tlunch {
 }
 
 message User {
-    int64 id = 1;
+    int64 user_id = 1;
     string name = 2;
     string surname = 3;
     string tg = 4;
@@ -89,18 +89,22 @@ message Lunch {
     google.protobuf.Timestamp time = 5;
     int64 number_of_participants = 6;
     optional string description = 7;
-    oneof users_oneof {
-        repeated User users = 8;
-    }
+    repeated User users = 8;
 }
 
 message LunchFeedback {
     Lunch lunch = 1;
-    bool liked = 2;
+    bool is_liked = 2;
 }
 
 message UserRequest {
     int64 user_id = 1;
+}
+
+message LunchRequest {
+    int64 user_id = 1;
+    int32 offset = 2;
+    int32 limit = 3;
 }
 
 message GetLunchesResponse {
