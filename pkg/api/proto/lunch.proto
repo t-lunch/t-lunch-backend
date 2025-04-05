@@ -8,9 +8,26 @@ import "google/timestamp.proto";
 package tlunch;
 
 service Tlunch {
-    // TODO: registration
-    // TODO: authorization
-    // TODO: authentication
+    rpc Registration (RegistrationRequest) returns (User) {
+        option (google.api.http) = {
+            post: "/v1/signup"
+            body: "*"
+        };
+    }
+    
+    rpc Login (LoginRequest) returns (LoginResponse) {
+        option (google.api.http) = {
+            post: "/v1/signin"
+            body: "*"
+        };
+    }
+
+    rpc Refresh (RefreshRequest) returns (RefreshResponse) {
+        option (google.api.http) = {
+            post: "/v1/refresh"
+            body: "*"
+        };
+    }
 
     rpc GetProfile (UserRequest) returns (User) {
         option (google.api.http) = {
@@ -72,6 +89,16 @@ service Tlunch {
     }
 }
 
+message RegistrationRequest {
+    string name = 1;
+    string surname = 2;
+    string tg = 3;
+    string office = 4;
+    string emoji = 5;
+    string email = 6;
+    string password = 7;
+}
+
 message User {
     int64 user_id = 1;
     string name = 2;
@@ -79,6 +106,24 @@ message User {
     string tg = 4;
     string office = 5;
     string emoji = 6;
+}
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+}
+
+message RefreshRequest {
+    string refresh_token = 1;
+}
+
+message RefreshResponse {
+    string access_token = 1;
 }
 
 message Lunch {
