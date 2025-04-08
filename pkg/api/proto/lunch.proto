@@ -1,0 +1,188 @@
+syntax = "proto3";
+
+option go_package = "t-lunch-backend/pkg/api/generated;tlunch";
+
+import "google/annotations.proto";
+import "google/timestamp.proto";
+
+package tlunch;
+
+service Tlunch {
+    rpc Registration (RegistrationRequest) returns (User) {
+        option (google.api.http) = {
+            post: "/v1/signup"
+            body: "*"
+        };
+    }
+    
+    rpc Login (LoginRequest) returns (LoginResponse) {
+        option (google.api.http) = {
+            post: "/v1/signin"
+            body: "*"
+        };
+    }
+
+    rpc Refresh (RefreshRequest) returns (RefreshResponse) {
+        option (google.api.http) = {
+            post: "/v1/refresh"
+            body: "*"
+        };
+    }
+
+    rpc GetProfile (UserRequest) returns (User) {
+        option (google.api.http) = {
+            get: "/v1/profile/{user_id}"
+        };
+    }
+
+    rpc ChangeProfile (User) returns (User) {
+        option (google.api.http) = {
+            patch: "/v1/profile/{user_id}"
+            body: "*"
+        };
+    }
+
+    rpc GetLunches (LunchRequest) returns (GetLunchesResponse) {
+        option (google.api.http) = {
+            get: "/v1/lunches"
+        };
+    }
+
+    rpc CreateLunch (CreateLunchRequest) returns (LunchResponse) {
+        option (google.api.http) = {
+            post: "/v1/lunch"
+            body: "*"
+        };
+    }
+
+    rpc JoinLunch (ActionLunchRequest) returns (LunchResponse) {
+        option (google.api.http) = {
+            patch: "/v1/lunch/{lunch_id}/join"
+            body: "*"
+        };
+    }
+
+    rpc LeaveLunch (ActionLunchRequest) returns (LunchResponse) {
+        option (google.api.http) = {
+            patch: "/v1/lunch/{lunch_id}/leave"
+            body: "*"
+        };
+    }
+
+    rpc GetDetailLunch (DetailLunchRequest) returns (LunchResponse) {
+        option (google.api.http) = {
+            get: "/v1/lunch/{lunch_id}"
+        };
+    }
+
+    rpc GetLunchHistory (LunchRequest) returns (LunchHistoryResponse) {
+        option (google.api.http) = {
+            get: "/v1/lunch/{user_id}/history"
+        };
+    }
+
+    rpc RateLunch (RateLunchRequest) returns (LunchFeedback) {
+        option (google.api.http) = {
+            patch: "/v1/lunch/{user_id}/history/{lunch_id}"
+            body: "*"
+        };
+    }
+}
+
+message RegistrationRequest {
+    string name = 1;
+    string surname = 2;
+    string tg = 3;
+    string office = 4;
+    string emoji = 5;
+    string email = 6;
+    string password = 7;
+}
+
+message User {
+    int64 user_id = 1;
+    string name = 2;
+    string surname = 3;
+    string tg = 4;
+    string office = 5;
+    string emoji = 6;
+}
+
+message LoginRequest {
+    string email = 1;
+    string password = 2;
+}
+
+message LoginResponse {
+    string access_token = 1;
+    string refresh_token = 2;
+}
+
+message RefreshRequest {
+    string refresh_token = 1;
+}
+
+message RefreshResponse {
+    string access_token = 1;
+}
+
+message Lunch {
+    int64 id = 1;
+    string name = 2;
+    string surname = 3;
+    string place = 4;
+    google.protobuf.Timestamp time = 5;
+    int64 number_of_participants = 6;
+    optional string description = 7;
+    repeated User users = 8;
+}
+
+message LunchFeedback {
+    Lunch lunch = 1;
+    bool is_liked = 2;
+}
+
+message UserRequest {
+    int64 user_id = 1;
+}
+
+message LunchRequest {
+    int64 user_id = 1;
+    int32 offset = 2;
+    int32 limit = 3;
+}
+
+message GetLunchesResponse {
+    repeated Lunch lunches = 1;
+    optional int64 lunch_id = 2;
+}
+
+message CreateLunchRequest {
+    int64 user_id = 1;
+    string place = 2;
+    google.protobuf.Timestamp time = 3;
+    string description = 4;
+}
+
+message LunchResponse {
+    Lunch lunch = 1;
+}
+
+message ActionLunchRequest {
+    int64 lunch_id = 1;
+    int64 user_id = 2;
+}
+
+message DetailLunchRequest {
+    int64 lunch_id = 1;
+}
+
+message LunchHistoryResponse {
+    repeated LunchFeedback lunches = 1;
+}
+
+message RateLunchRequest {
+    int64 user_id = 1;
+    int64 lunch_id = 2;
+    bool is_liked = 3;
+}
