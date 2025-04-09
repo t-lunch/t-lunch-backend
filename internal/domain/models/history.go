@@ -1,8 +1,8 @@
 package models
 
 type History struct {
-	ID      int
-	User    int
-	Lunch   int
+	ID      int64
+	User    int64
+	Lunch   int64
 	IsLiked bool
 }

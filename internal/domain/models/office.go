@@ -1,6 +1,6 @@
 package models
 
 type Office struct {
-	ID      int
+	ID      int64
 	Address string
 }

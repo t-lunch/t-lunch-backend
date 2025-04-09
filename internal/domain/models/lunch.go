@@ -1,11 +1,13 @@
 package models
 
+import "time"
+
 type Lunch struct {
-	ID                   int
-	Creator              int
-	Time                 string
+	ID                   int64
+	Creator              int64
+	Time                 time.Duration
 	Place                string
 	Optional             string
-	Participants         []int
-	NumberOfParticipants int
+	Participants         []int64
+	NumberOfParticipants int64
 }
