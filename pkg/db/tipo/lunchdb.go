@@ -52,6 +52,26 @@ func (l *Lunches) GetLunch(id int64) (*models.Lunch, error) {
 	return lunch, nil
 }
 
+func (l *Lunches) UpdateLunch(id, creator int64, time time.Duration, place, optional string, participants []int64) (*models.Lunch, error) {
+	lunch, err := l.GetLunch(id)
+	if err != nil {
+		return nil, err
+	}
+
+	l.mu.Lock()
+	defer l.mu.Unlock()
+
+	lunch.Creator = creator
+	lunch.Time = time
+	lunch.Place = place
+	lunch.Optional = optional
+	lunch.Participants = participants
+	lunch.NumberOfParticipants = int64(len(participants))
+
+	l.data[id] = lunch
+	return lunch, nil
+}
+
 func (l *Lunches) ListLunches() []*models.Lunch {
 	l.mu.Lock()
 	defer l.mu.Unlock()

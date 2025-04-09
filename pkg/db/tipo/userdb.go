@@ -52,6 +52,26 @@ func (u *Users) GetUser(id int64) (*models.User, error) {
 	return user, nil
 }
 
+func (u *Users) UpdateUser(id int64, name, surname, tg string, office int64, login, password string) (*models.User, error) {
+	user, err := u.GetUser(id)
+	if err != nil {
+		return nil, err
+	}
+
+	u.mu.Lock()
+	defer u.mu.Unlock()
+
+	user.Name = name
+	user.Surname = surname
+	user.Tg = tg
+	user.Office = office
+	user.Login = login
+	user.Password = password
+
+	u.data[id] = user
+	return user, nil
+}
+
 func (u *Users) ListUsers() []*models.User {
 	u.mu.Lock()
 	defer u.mu.Unlock()

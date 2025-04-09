@@ -23,6 +23,10 @@ func (r *UserRepository) GetUser(ctx context.Context, id int64) (*models.User, e
 	return r.tipodb.GetUser(id)
 }
 
+func (r *UserRepository) UpdateUser(ctx context.Context, user *models.User) (*models.User, error) {
+	return r.tipodb.UpdateUser(user.ID, user.Name, user.Surname, user.Tg, user.Office, user.Login, user.Password)
+}
+
 func (r *UserRepository) ListUsers(ctx context.Context) ([]*models.User, error) {
 	return r.tipodb.ListUsers(), nil
 }
