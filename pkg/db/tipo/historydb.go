@@ -78,7 +78,7 @@ func (h *Histories) DeleteHistory(id int) (bool, error) {
 	return true, nil
 }
 
-func (h *Histories) ListHistories() []*models.History {
+func (h *Histories) ListHistory() []*models.History {
 	h.mu.Lock()
 	defer h.mu.Unlock()
 
