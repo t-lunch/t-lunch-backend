@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/t-lunch/t-lunch-backend/internal/models"
+	"github.com/t-lunch/t-lunch-backend/internal/domain/models"
 )
 
 var (
