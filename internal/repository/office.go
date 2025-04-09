@@ -23,14 +23,6 @@ func (r *OfficeRepository) GetOffice(ctx context.Context, id int) (*models.Offic
 	return r.tipodb.GetOffice(id)
 }
 
-func (r *OfficeRepository) UpdateOffice(ctx context.Context, office *models.Office) (*models.Office, error) {
-	return r.tipodb.UpdateOffice(office.ID, office.Address)
-}
-
-func (r *OfficeRepository) DeleteOffice(ctx context.Context, id int) (bool, error) {
-	return r.tipodb.DeleteOffice(id)
-}
-
 func (r *OfficeRepository) ListOffices(ctx context.Context) ([]*models.Office, error) {
 	return r.tipodb.ListOffices(), nil
 }

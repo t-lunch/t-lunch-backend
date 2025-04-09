@@ -4,7 +4,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/t-lunch/t-lunch-backend/internal/domain/models"
+	"github.com/t-lunch/t-lunch-backend/internal/models"
 )
 
 var (
@@ -12,16 +12,16 @@ var (
 )
 
 type Offices struct {
-	key  int
-	data map[int]*models.Office
+	key  int64
+	data map[int64]*models.Office
 	mu   sync.Mutex
 }
 
 func NewOffices() *Offices {
-	return &Offices{data: make(map[int]*models.Office)}
+	return &Offices{data: make(map[int64]*models.Office)}
 }
 
-func (o *Offices) AddOffice(address string) int {
+func (o *Offices) AddOffice(address string) int64 {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
@@ -35,7 +35,7 @@ func (o *Offices) AddOffice(address string) int {
 	return office.ID
 }
 
-func (o *Offices) GetOffice(id int) (*models.Office, error) {
+func (o *Offices) GetOffice(id int64) (*models.Office, error) {
 	o.mu.Lock()
 	defer o.mu.Unlock()
 
@@ -44,33 +44,6 @@ func (o *Offices) GetOffice(id int) (*models.Office, error) {
 		return nil, ErrOfficeDoesNotExist
 	}
 	return office, nil
-}
-
-func (o *Offices) UpdateOffice(id int, address string) (*models.Office, error) {
-	office, err := o.GetOffice(id)
-	if err != nil {
-		return nil, err
-	}
-
-	o.mu.Lock()
-	defer o.mu.Unlock()
-
-	office.Address = address
-	o.data[id] = office
-	return office, nil
-}
-
-func (o *Offices) DeleteOffice(id int) (bool, error) {
-	_, err := o.GetOffice(id)
-	if err != nil {
-		return false, err
-	}
-
-	o.mu.Lock()
-	defer o.mu.Unlock()
-
-	delete(o.data, id)
-	return true, nil
 }
 
 func (o *Offices) ListOffices() []*models.Office {

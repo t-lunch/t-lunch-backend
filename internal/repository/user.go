@@ -16,7 +16,7 @@ func NewUserRepository(tdb *tipo.Users) *UserRepository {
 }
 
 func (r *UserRepository) CreateUser(ctx context.Context, user *models.User) (int, error) {
-	return r.tipodb.AddUser(user.Name, user.Surname, user.Tg, user.Office, user.Login, user.Password), nil
+	return r.tipodb.AddUser(user.Name, user.Surname, user.Tg, user.Office, user.Login, user.Password, user.Emoji), nil
 }
 
 func (r *UserRepository) GetUser(ctx context.Context, id int) (*models.User, error) {
@@ -24,11 +24,7 @@ func (r *UserRepository) GetUser(ctx context.Context, id int) (*models.User, err
 }
 
 func (r *UserRepository) UpdateUser(ctx context.Context, user *models.User) (*models.User, error) {
-	return r.tipodb.UpdateUser(user.ID, user.Name, user.Surname, user.Tg, user.Office, user.Login, user.Password)
-}
-
-func (r *UserRepository) DeleteUser(ctx context.Context, id int) (bool, error) {
-	return r.tipodb.DeleteUser(id)
+	return r.tipodb.UpdateUser(user.ID, user.Name, user.Surname, user.Tg, user.Office, user.Login, user.Password, user.Emoji)
 }
 
 func (r *UserRepository) ListUsers(ctx context.Context) ([]*models.User, error) {

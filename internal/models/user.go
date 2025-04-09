@@ -8,4 +8,5 @@ type User struct {
 	Office   int64
 	Login    string
 	Password string
+	Emoji    string
 }

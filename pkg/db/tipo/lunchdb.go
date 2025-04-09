@@ -3,8 +3,9 @@ package tipo
 import (
 	"errors"
 	"sync"
+	"time"
 
-	"github.com/t-lunch/t-lunch-backend/internal/domain/models"
+	"github.com/t-lunch/t-lunch-backend/internal/models"
 )
 
 var (
@@ -12,16 +13,16 @@ var (
 )
 
 type Lunches struct {
-	key  int
-	data map[int]*models.Lunch
+	key  int64
+	data map[int64]*models.Lunch
 	mu   sync.Mutex
 }
 
 func NewLunches() *Lunches {
-	return &Lunches{data: make(map[int]*models.Lunch)}
+	return &Lunches{data: make(map[int64]*models.Lunch)}
 }
 
-func (l *Lunches) AddLunch(creator int, time, place, optional string, participants []int) int {
+func (l *Lunches) AddLunch(creator int64, time time.Duration, place, optional string, participants []int64) int64 {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -32,7 +33,7 @@ func (l *Lunches) AddLunch(creator int, time, place, optional string, participan
 		Place:                place,
 		Optional:             optional,
 		Participants:         participants,
-		NumberOfParticipants: len(participants),
+		NumberOfParticipants: int64(len(participants)),
 	}
 	l.key++
 
@@ -40,7 +41,7 @@ func (l *Lunches) AddLunch(creator int, time, place, optional string, participan
 	return lunch.ID
 }
 
-func (l *Lunches) GetLunch(id int) (*models.Lunch, error) {
+func (l *Lunches) GetLunch(id int64) (*models.Lunch, error) {
 	l.mu.Lock()
 	defer l.mu.Unlock()
 
@@ -49,39 +50,6 @@ func (l *Lunches) GetLunch(id int) (*models.Lunch, error) {
 		return nil, ErrLunchDoesNotExist
 	}
 	return lunch, nil
-}
-
-func (l *Lunches) UpdateLunch(id, creator int, time, place, optional string, participants []int) (*models.Lunch, error) {
-	lunch, err := l.GetLunch(id)
-	if err != nil {
-		return nil, err
-	}
-
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
-	lunch.Creator = creator
-	lunch.Time = time
-	lunch.Place = place
-	lunch.Optional = optional
-	lunch.Participants = participants
-	lunch.NumberOfParticipants = len(participants)
-
-	l.data[id] = lunch
-	return lunch, nil
-}
-
-func (l *Lunches) DeleteLunch(id int) (bool, error) {
-	_, err := l.GetLunch(id)
-	if err != nil {
-		return false, err
-	}
-
-	l.mu.Lock()
-	defer l.mu.Unlock()
-
-	delete(l.data, id)
-	return true, nil
 }
 
 func (l *Lunches) ListLunches() []*models.Lunch {
