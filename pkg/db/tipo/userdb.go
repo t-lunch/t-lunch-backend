@@ -21,7 +21,7 @@ func NewUsers() *Users {
 	return &Users{data: make(map[int64]*models.User)}
 }
 
-func (u *Users) AddUser(name, surname, tg, login, password string, office int64) int64 {
+func (u *Users) AddUser(name, surname, tg string, office int64, login, password, emoji string) int64 {
 	u.mu.Lock()
 	defer u.mu.Unlock()
 
@@ -33,6 +33,7 @@ func (u *Users) AddUser(name, surname, tg, login, password string, office int64)
 		Office:   office,
 		Login:    login,
 		Password: password,
+		Emoji:    emoji,
 	}
 	u.key++
 

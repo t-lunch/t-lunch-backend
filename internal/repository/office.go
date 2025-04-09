@@ -15,11 +15,11 @@ func NewOfficeRepository(tdb *tipo.Offices) *OfficeRepository {
 	return &OfficeRepository{tipodb: tdb}
 }
 
-func (r *OfficeRepository) CreateOffice(ctx context.Context, office *models.Office) (int, error) {
+func (r *OfficeRepository) CreateOffice(ctx context.Context, office *models.Office) (int64, error) {
 	return r.tipodb.AddOffice(office.Address), nil
 }
 
-func (r *OfficeRepository) GetOffice(ctx context.Context, id int) (*models.Office, error) {
+func (r *OfficeRepository) GetOffice(ctx context.Context, id int64) (*models.Office, error) {
 	return r.tipodb.GetOffice(id)
 }
 

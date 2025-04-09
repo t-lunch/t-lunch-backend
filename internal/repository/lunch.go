@@ -15,11 +15,11 @@ func NewLunchRepository(tdb *tipo.Lunches) *LunchRepository {
 	return &LunchRepository{tipodb: tdb}
 }
 
-func (r *LunchRepository) CreateLunch(ctx context.Context, lunch *models.Lunch) (int, error) {
-	return r.tipodb.AddLunch(lunch.Creator, lunch.Time, lunch.Place, lunch.Optional, lunch.Participants, lunch.NumberOfParticipants), nil
+func (r *LunchRepository) CreateLunch(ctx context.Context, lunch *models.Lunch) (int64, error) {
+	return r.tipodb.AddLunch(lunch.Creator, lunch.Time, lunch.Place, lunch.Optional, lunch.Participants), nil
 }
 
-func (r *LunchRepository) GetLunch(ctx context.Context, id int) (*models.Lunch, error) {
+func (r *LunchRepository) GetLunch(ctx context.Context, id int64) (*models.Lunch, error) {
 	return r.tipodb.GetLunch(id)
 }
 

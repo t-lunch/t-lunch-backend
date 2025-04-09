@@ -15,11 +15,11 @@ func NewHistoryRepository(tdb *tipo.Histories) *HistoryRepository {
 	return &HistoryRepository{tipodb: tdb}
 }
 
-func (r *HistoryRepository) CreateHistory(ctx context.Context, history *models.History) (int, error) {
+func (r *HistoryRepository) CreateHistory(ctx context.Context, history *models.History) (int64, error) {
 	return r.tipodb.AddHistory(history.UserID, history.LunchID, history.IsLiked), nil
 }
 
-func (r *HistoryRepository) GetHistory(ctx context.Context, id int) (*models.History, error) {
+func (r *HistoryRepository) GetHistory(ctx context.Context, id int64) (*models.History, error) {
 	return r.tipodb.GetHistory(id)
 }
 
