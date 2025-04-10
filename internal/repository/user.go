@@ -2,31 +2,45 @@ package repository
 
 import (
 	"context"
+	"t-lunch-backend/internal/models"
 
-	"github.com/t-lunch/t-lunch-backend/internal/models"
-	"github.com/t-lunch/t-lunch-backend/pkg/db/tipo"
+	"database/sql"
 )
 
-type UserRepository struct {
-	tipodb *tipo.Users
+type PostgresUserRepository struct {
+	db *sql.DB
 }
 
-func NewUserRepository(tdb *tipo.Users) *UserRepository {
-	return &UserRepository{tipodb: tdb}
+func NewUserRepository(db *sql.DB) UserRepository {
+	return &PostgresUserRepository{db: db}
 }
 
-func (r *UserRepository) CreateUser(ctx context.Context, user *models.User) (int64, error) {
-	return r.tipodb.AddUser(user.Name, user.Surname, user.Tg, user.Office, user.Login, user.Password, user.Emoji), nil
+func (r *PostgresUserRepository) CreateUser(ctx context.Context, user *models.User) error {
+	return r.db.WithContext(ctx).Create(user).Error
 }
 
-func (r *UserRepository) GetUser(ctx context.Context, id int64) (*models.User, error) {
-	return r.tipodb.GetUser(id)
+func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID int64) (*models.User, error) {
+	var user models.User
+	err := r.db.WithContext(ctx).
+		Where("user_id = ?", userID).
+		First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
-func (r *UserRepository) UpdateUser(ctx context.Context, user *models.User) (*models.User, error) {
-	return r.tipodb.UpdateUser(user.ID, user.Name, user.Surname, user.Tg, user.Office, user.Login, user.Password)
+func (r *PostgresUserRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	var user models.User
+	err := r.db.WithContext(ctx).
+		Where("email = ?", email).
+		First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }
 
-func (r *UserRepository) ListUsers(ctx context.Context) ([]*models.User, error) {
-	return r.tipodb.ListUsers(), nil
+func (r *PostgresUserRepository) UpdateUser(ctx context.Context, user *models.User) error {
+	return r.db.WithContext(ctx).Save(user).Error
 }
