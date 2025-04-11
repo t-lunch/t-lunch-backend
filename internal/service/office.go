@@ -3,8 +3,8 @@ package service
 import (
 	"context"
 
-	"github.com/t-lunch-backend/pkg/models"
-	"github.com/t-lunch-backend/pkg/repository"
+	"github.com/t-lunch-backend/internal/models"
+	"github.com/t-lunch-backend/internal/repository"
 )
 
 type OfficeService struct {
