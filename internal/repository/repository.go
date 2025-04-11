@@ -22,3 +22,14 @@ type UserRepository interface {
 	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	UpdateUser(ctx context.Context, user *models.User) error
 }
+
+type OfficeRepository interface {
+	CreateOffice(ctx context.Context, office *models.Office) error
+	GetOfficeByID(ctx context.Context, id int64) (*models.Office, error)
+}
+
+type HistoryRepository interface {
+	CreateHistory(ctx context.Context, history *models.History) error
+	GetHistoryByUser(ctx context.Context, userID int64) ([]models.History, error)
+	UpdateHistory(ctx context.Context, history *models.History) error
+}

@@ -2,7 +2,8 @@ package repository
 
 import (
 	"context"
-	"t-lunch-backend/internal/models"
+
+	"github.com/t-lunch-backend/internal/models"
 
 	"database/sql"
 )
@@ -55,26 +56,26 @@ func (r *PostgresLunchRepository) GetLunchByID(ctx context.Context, lunchID int6
 }
 
 func (r *PostgresLunchRepository) JoinLunch(ctx context.Context, lunchID, userID int64) error {
-	query := "INSERT INTO lunch_participants (lunch_id, user_id) VALUES (?, ?)"
+	query := "INSERT INTO lunches (lunch_id, user_id) VALUES (?, ?)"
 	_, err := r.db.ExecContext(ctx, query, lunchID, userID)
 	return err
 }
 
 func (r *PostgresLunchRepository) LeaveLunch(ctx context.Context, lunchID, userID int64) error {
-	query := "DELETE FROM lunch_participants WHERE lunch_id = ? AND user_id = ?"
+	query := "DELETE FROM lunches WHERE lunch_id = ? AND user_id = ?"
 	_, err := r.db.ExecContext(ctx, query, lunchID, userID)
 	return err
 }
 
 func (r *PostgresLunchRepository) RateLunch(ctx context.Context, userID, lunchID int64, isLiked bool) error {
-	query := "INSERT INTO lunch_feedback (user_id, lunch_id, is_liked) VALUES (?, ?, ?) ON CONFLICT (user_id, lunch_id) DO UPDATE SET is_liked = ?"
+	query := "INSERT INTO histories (user_id, lunch_id, is_liked) VALUES (?, ?, ?) ON CONFLICT (user_id, lunch_id) DO UPDATE SET is_liked = ?"
 	_, err := r.db.ExecContext(ctx, query, userID, lunchID, isLiked, isLiked)
 	return err
 }
 
 func (r *PostgresLunchRepository) GetLunchHistory(ctx context.Context, userID int64) ([]models.LunchFeedback, error) {
 	var history []models.LunchFeedback
-	query := "SELECT * FROM history WHERE user_id = ?"
+	query := "SELECT * FROM histories WHERE user_id = ?"
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
 		return nil, err

@@ -2,7 +2,8 @@ package repository
 
 import (
 	"context"
-	"t-lunch-backend/internal/models"
+
+	"github.com/t-lunch-backend/internal/models"
 
 	"database/sql"
 )
@@ -16,14 +17,16 @@ func NewUserRepository(db *sql.DB) UserRepository {
 }
 
 func (r *PostgresUserRepository) CreateUser(ctx context.Context, user *models.User) error {
-	return r.db.WithContext(ctx).Create(user).Error
+	query := "INSERT INTO users (name, email, password) VALUES ($1, $2, $3)"
+	_, err := r.db.ExecContext(ctx, query, user.Name, user.Email, user.Password)
+	return err
 }
 
 func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID int64) (*models.User, error) {
 	var user models.User
-	err := r.db.WithContext(ctx).
-		Where("user_id = ?", userID).
-		First(&user).Error
+	query := "SELECT user_id, name, email, password FROM users WHERE user_id = $1"
+	row := r.db.QueryRowContext(ctx, query, userID)
+	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -32,9 +35,9 @@ func (r *PostgresUserRepository) GetUserByID(ctx context.Context, userID int64) 
 
 func (r *PostgresUserRepository) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
 	var user models.User
-	err := r.db.WithContext(ctx).
-		Where("email = ?", email).
-		First(&user).Error
+	query := "SELECT user_id, name, email, password FROM users WHERE email = $1"
+	row := r.db.QueryRowContext(ctx, query, email)
+	err := row.Scan(&user.ID, &user.Name, &user.Email, &user.Password)
 	if err != nil {
 		return nil, err
 	}
@@ -42,5 +45,7 @@ func (r *PostgresUserRepository) GetUserByEmail(ctx context.Context, email strin
 }
 
 func (r *PostgresUserRepository) UpdateUser(ctx context.Context, user *models.User) error {
-	return r.db.WithContext(ctx).Save(user).Error
+	query := "UPDATE users SET name = $1, email = $2, password = $3 WHERE user_id = $4"
+	_, err := r.db.ExecContext(ctx, query, user.Name, user.Email, user.Password, user.ID)
+	return err
 }
