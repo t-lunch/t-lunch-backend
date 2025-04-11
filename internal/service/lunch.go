@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"errors"
 
 	"github.com/t-lunch-backend/pkg/models"
 	"github.com/t-lunch-backend/pkg/repository"
@@ -16,6 +17,9 @@ func NewTlunchService(lunchRepo repository.LunchRepository) *TlunchService {
 }
 
 func (s *TlunchService) CreateLunch(ctx context.Context, lunch *models.Lunch) error {
+	if lunch.Place == "" {
+		return errors.New("place is required")
+	}
 	return s.lunchRepo.CreateLunch(ctx, lunch)
 }
 
@@ -33,10 +37,6 @@ func (s *TlunchService) JoinLunch(ctx context.Context, lunchID, userID int64) er
 
 func (s *TlunchService) LeaveLunch(ctx context.Context, lunchID, userID int64) error {
 	return s.lunchRepo.LeaveLunch(ctx, lunchID, userID)
-}
-
-func (s *TlunchService) RateLunch(ctx context.Context, lunchID, userID int64, rating float64) error {
-	return s.lunchRepo.RateLunch(ctx, lunchID, userID, rating)
 }
 
 func (s *TlunchService) GetLunchHistory(ctx context.Context, lunchID int64) (float64, error) {

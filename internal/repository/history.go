@@ -8,20 +8,29 @@ import (
 	"database/sql"
 )
 
-type PostgresHistoryRepository struct {
+type historyRepository struct {
 	db *sql.DB
 }
 
 func NewHistoryRepository(db *sql.DB) HistoryRepository {
-	return &PostgresHistoryRepository{db: db}
+	return &historyRepository{db: db}
 }
 
-func (r *PostgresHistoryRepository) CreateHistory(ctx context.Context, history *models.History) error {
+func (r *historyRepository) CreateHistory(ctx context.Context, history *models.History) error {
 	query := "INSERT INTO histories (user_id, lunch_id, is_liked) VALUES ($1, $2, $3) RETURNING id"
 	return r.db.QueryRowContext(ctx, query, history.UserID, history.LunchID, history.IsLiked).Scan(&history.ID)
 }
 
-func (r *PostgresHistoryRepository) GetHistoryByUser(ctx context.Context, userID int64) ([]models.History, error) {
+func (r *historyRepository) RateLunch(ctx context.Context, userID, lunchID int64, isLiked bool) error {
+	query := `INSERT INTO history (user_id, lunch_id, is_liked) 
+	          VALUES ($1, $2, $3) 
+	          ON CONFLICT (user_id, lunch_id) 
+	          DO UPDATE SET is_liked = EXCLUDED.is_liked`
+	_, err := r.db.ExecContext(ctx, query, userID, lunchID, isLiked)
+	return err
+}
+
+func (r *historyRepository) GetHistoryByUser(ctx context.Context, userID int64) ([]models.History, error) {
 	query := "SELECT id, user_id, lunch_id, is_liked FROM histories WHERE user_id = $1"
 	rows, err := r.db.QueryContext(ctx, query, userID)
 	if err != nil {
@@ -38,10 +47,4 @@ func (r *PostgresHistoryRepository) GetHistoryByUser(ctx context.Context, userID
 		histories = append(histories, history)
 	}
 	return histories, nil
-}
-
-func (r *PostgresHistoryRepository) UpdateHistory(ctx context.Context, history *models.History) error {
-	query := "UPDATE histories SET is_liked = $1 WHERE id = $2"
-	_, err := r.db.ExecContext(ctx, query, history.IsLiked, history.ID)
-	return err
 }

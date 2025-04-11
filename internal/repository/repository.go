@@ -12,7 +12,6 @@ type LunchRepository interface {
 	GetLunchByID(ctx context.Context, lunchID int64) (*models.Lunch, error)
 	JoinLunch(ctx context.Context, lunchID, userID int64) error
 	LeaveLunch(ctx context.Context, lunchID, userID int64) error
-	RateLunch(ctx context.Context, userID, lunchID int64, isLiked bool) error
 	GetLunchHistory(ctx context.Context, userID int64) ([]models.LunchFeedback, error)
 }
 
@@ -30,6 +29,6 @@ type OfficeRepository interface {
 
 type HistoryRepository interface {
 	CreateHistory(ctx context.Context, history *models.History) error
+	RateLunch(ctx context.Context, userID, lunchID int64, isLiked bool) error
 	GetHistoryByUser(ctx context.Context, userID int64) ([]models.History, error)
-	UpdateHistory(ctx context.Context, history *models.History) error
 }
