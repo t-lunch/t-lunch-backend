@@ -1,0 +1,10 @@
+database:
+  host: "localhost"
+  port: "5433"
+  user: "tusers"
+  password: "tstrongpassword"
+  dbname: "tlunch"
+  sslmode: "disable"
+
+server:
+  http_port: 8080

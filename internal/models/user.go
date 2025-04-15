@@ -5,8 +5,8 @@ type User struct {
 	Name     string
 	Surname  string
 	Tg       string
-	Office   int64
-	Login    string
-	Password string
+	Office   string //int64
 	Emoji    string
+	Email    string
+	Password string
 }
