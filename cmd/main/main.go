@@ -34,8 +34,9 @@ func main() {
 
 	// fmt.Println("KAIF")
 
-	repo := repository.NewAuthRepository(psql)
-	srv := service.NewAuthService(repo)
+	userRepo := repository.NewUserRepository(psql)
+	authRepo := repository.NewAuthRepository(psql)
+	srv := service.NewAuthService(userRepo, authRepo)
 	server := app.NewServer(cfg.Server.HTTPPort, srv)
 
 	gracefulShutdown := make(chan os.Signal, 1)

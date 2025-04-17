@@ -2,7 +2,6 @@ package transport
 
 import (
 	"context"
-	"errors"
 
 	"github.com/AlekSi/pointer"
 	"github.com/t-lunch/t-lunch-backend/internal/models"
@@ -26,18 +25,18 @@ func NewAuthTransport(authService AuthService) *AuthTransport {
 
 func (t *AuthTransport) Registration(ctx context.Context, request *tlunch.RegistrationRequest) (*tlunch.User, error) {
 	user := &models.User{
-		Name:     request.GetName(),
-		Surname:  request.GetSurname(),
-		Tg:       request.GetTg(),
-		Office:   request.GetOffice(),
-		Emoji:    request.GetEmoji(),
-		Email:    request.GetEmail(),
-		Password: request.GetPassword(),
+		Name:           request.GetName(),
+		Surname:        request.GetSurname(),
+		Tg:             request.GetTg(),
+		Office:         request.GetOffice(),
+		Emoji:          request.GetEmoji(),
+		Email:          request.GetEmail(),
+		HashedPassword: request.GetPassword(),
 	}
 
 	response, err := t.authService.Registration(ctx, user)
 	if err != nil {
-		return nil, errors.New("error AuthTransport: Registration")
+		return nil, err
 	}
 	rsafe := pointer.Get(response)
 	return &tlunch.User{
@@ -53,7 +52,7 @@ func (t *AuthTransport) Registration(ctx context.Context, request *tlunch.Regist
 func (t *AuthTransport) Login(ctx context.Context, request *tlunch.LoginRequest) (*tlunch.LoginResponse, error) {
 	accessToken, refreshToken, err := t.authService.Login(ctx, request.GetEmail(), request.GetPassword())
 	if err != nil {
-		return nil, errors.New("error AuthTransport: Login")
+		return nil, err
 	}
 	return &tlunch.LoginResponse{
 		AccessToken:  accessToken,
@@ -64,7 +63,7 @@ func (t *AuthTransport) Login(ctx context.Context, request *tlunch.LoginRequest)
 func (t *AuthTransport) Refresh(ctx context.Context, request *tlunch.RefreshRequest) (*tlunch.RefreshResponse, error) {
 	accessToken, err := t.authService.Refresh(ctx, request.GetRefreshToken())
 	if err != nil {
-		return nil, errors.New("error AuthTransport: Refresh")
+		return nil, err
 	}
 	return &tlunch.RefreshResponse{
 		AccessToken: accessToken,

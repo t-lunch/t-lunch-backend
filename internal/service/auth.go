@@ -5,34 +5,50 @@ import (
 	"errors"
 
 	"github.com/t-lunch/t-lunch-backend/internal/models"
+	"golang.org/x/crypto/bcrypt"
 )
 
-type AuthRepo interface {
+type UserRepo interface {
 	CreateUser(ctx context.Context, user *models.User) error
-	GetUserByEmail(ctx context.Context, email string) (int64, error)
-	CheckPassword(ctx context.Context, email, password string) (bool, error)
+	GetUserPasswordByEmail(ctx context.Context, email string) (string, error)
+}
+
+type AuthRepo interface {
 	GenerateAccessToken(ctx context.Context) string
 	GenerateRefreshToken(ctx context.Context) string
-	ValidateRefreshToken(ctx context.Context, token string) (bool, error)
 }
 
 type AuthService struct {
-	repo AuthRepo
+	userRepo UserRepo
+	authRepo AuthRepo
 }
 
-func NewAuthService(repo AuthRepo) *AuthService {
-	return &AuthService{repo: repo}
+func NewAuthService(userRepo UserRepo, authRepo AuthRepo) *AuthService {
+	return &AuthService{
+		userRepo: userRepo,
+		authRepo: authRepo,
+	}
 }
 
 func (s *AuthService) Registration(ctx context.Context, user *models.User) (*models.User, error) {
 	// TODO проверка, что пользователя с таким логином еще нет
-	if user.Name == "" || user.Surname == "" || user.Tg == "" || user.Office == "" || user.Emoji == "" || user.Email == "" || user.Password == "" {
-		return nil, errors.New("Все поля обязательны")
+	if user.Name == "" || user.Surname == "" || user.Tg == "" || user.Office == "" || user.Emoji == "" || user.Email == "" || user.HashedPassword == "" {
+		return nil, errors.New("все поля обязательны")
 	}
 
-	err := s.repo.CreateUser(ctx, user)
+	if _, err := s.userRepo.GetUserPasswordByEmail(ctx, user.Email); err == nil {
+		return nil, errors.New("пользователь с таким email уже существует")
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.HashedPassword), bcrypt.DefaultCost)
 	if err != nil {
-		return nil, errors.New("error AuthRepo: CreateUser")
+		return nil, errors.New("ошибка хэш пароля")
+	}
+	user.HashedPassword = string(hashedPassword)
+
+	err = s.userRepo.CreateUser(ctx, user)
+	if err != nil {
+		return nil, errors.New("error userRepo: CreateUser")
 	}
 
 	return user, nil
@@ -40,37 +56,30 @@ func (s *AuthService) Registration(ctx context.Context, user *models.User) (*mod
 
 func (s *AuthService) Login(ctx context.Context, email, password string) (string, string, error) {
 	if email == "" || password == "" {
-		return "", "", errors.New("Все поля обязательны")
+		return "", "", errors.New("все поля обязательны")
 	}
 
-	_, err := s.repo.GetUserByEmail(ctx, email)
+	hashedPassword, err := s.userRepo.GetUserPasswordByEmail(ctx, email)
 	if err != nil {
-		return "", "", errors.New("error AuthRepo: GetUserByEmail")
+		return "", "", errors.New("error userRepo: GetUserPasswordByEmail")
 	}
 
-	isCorrect, err := s.repo.CheckPassword(ctx, email, password)
-	if err != nil {
-		return "", "", errors.New("error AuthRepo: CheckPassword")
-	}
-	if !isCorrect {
-		return "", "", errors.New("Неверные данные")
+	if bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) != nil {
+		return "", "", errors.New("error: CompareHashAndPassword")
 	}
 
-	return s.repo.GenerateAccessToken(ctx), s.repo.GenerateRefreshToken(ctx), nil
+	return s.authRepo.GenerateAccessToken(ctx), s.authRepo.GenerateRefreshToken(ctx), nil
 }
 
 func (s *AuthService) Refresh(ctx context.Context, token string) (string, error) {
 	if token == "" {
-		return "", errors.New("Все поля обязательны")
+		return "", errors.New("все поля обязательны")
 	}
 
-	isCorrect, err := s.repo.ValidateRefreshToken(ctx, token)
-	if err != nil {
-		return "", errors.New("error AuthRepo: ValidateRefreshToken")
-	}
-	if !isCorrect {
-		return "", errors.New("Неверный refresh-токен")
+	// TODO
+	if token != "mock_refresh_token" { // Замените на реализацию JWT
+		return "", errors.New("неверный refresh-токен")
 	}
 
-	return s.repo.GenerateAccessToken(ctx), nil
+	return s.authRepo.GenerateAccessToken(ctx), nil
 }
