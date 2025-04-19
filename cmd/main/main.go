@@ -25,7 +25,7 @@ func main() {
 
 	psql, err := postgres.NewDB(
 		context.Background(),
-		fmt.Sprintf("postgres://%s:%s@localhost:%s/%s?sslmode=disable", cfg.Database.User, cfg.Database.Password, cfg.Database.Port, cfg.Database.DBName),
+		fmt.Sprintf("postgres://%s:%s@postgres:%s/%s?sslmode=disable", cfg.Database.User, cfg.Database.Password, cfg.Database.Port, cfg.Database.DBName),
 	)
 	if err != nil {
 		fmt.Println("error: NewDB")

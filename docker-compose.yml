@@ -18,7 +18,27 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - tlunch-backend-network
+
+  tlunch:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: tlunch
+    ports:
+      - "8080:8080"
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - tlunch-backend-network
 
 volumes:
   postgres_data:
     name: tlunch_postgres_data
+
+networks:
+  tlunch-backend-network:
+    driver: bridge
