@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 	"errors"
+	"fmt"
+	"time"
 
 	"github.com/t-lunch/t-lunch-backend/internal/models"
 	"golang.org/x/crypto/bcrypt"
@@ -14,8 +16,8 @@ type UserRepo interface {
 }
 
 type AuthRepo interface {
-	GenerateAccessToken(ctx context.Context) string
-	GenerateRefreshToken(ctx context.Context) string
+	GenerateToken(ctx context.Context, secret string, expiration time.Duration, id int64) (string, error)
+	ValidateToken(ctx context.Context, secret, token string) (int64, bool)
 }
 
 type AuthService struct {
@@ -31,7 +33,6 @@ func NewAuthService(userRepo UserRepo, authRepo AuthRepo) *AuthService {
 }
 
 func (s *AuthService) Registration(ctx context.Context, user *models.User) (*models.User, error) {
-	// TODO проверка, что пользователя с таким логином еще нет
 	if user.Name == "" || user.Surname == "" || user.Tg == "" || user.Office == "" || user.Emoji == "" || user.Email == "" || user.HashedPassword == "" {
 		return nil, errors.New("все поля обязательны")
 	}
@@ -68,7 +69,17 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 		return "", "", errors.New("error: CompareHashAndPassword")
 	}
 
-	return s.authRepo.GenerateAccessToken(ctx), s.authRepo.GenerateRefreshToken(ctx), nil
+	accessToken, err := s.authRepo.GenerateToken(ctx, "secret", time.Hour*24, 1)
+	if err != nil {
+		return "", "", errors.New("error authRepo: GenerateToken access")
+	}
+
+	refreshToken, err := s.authRepo.GenerateToken(ctx, "secret", time.Hour*24*30, 1)
+	if err != nil {
+		return "", "", errors.New("error authRepo: GenerateToken refresh")
+	}
+
+	return accessToken, refreshToken, nil
 }
 
 func (s *AuthService) Refresh(ctx context.Context, token string) (string, error) {
@@ -76,10 +87,15 @@ func (s *AuthService) Refresh(ctx context.Context, token string) (string, error)
 		return "", errors.New("все поля обязательны")
 	}
 
-	// TODO
-	if token != "mock_refresh_token" { // Замените на реализацию JWT
-		return "", errors.New("неверный refresh-токен")
+	id, ok := s.authRepo.ValidateToken(ctx, "secret", token)
+	if !ok {
+		return "", fmt.Errorf("error authRepo: ValidateToken %d", id)
 	}
 
-	return s.authRepo.GenerateAccessToken(ctx), nil
+	accessToken, err := s.authRepo.GenerateToken(ctx, "secret", time.Hour*24, id)
+	if err != nil {
+		return "", errors.New("error authRepo: GenerateToken access")
+	}
+
+	return accessToken, nil
 }
