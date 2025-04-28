@@ -35,7 +35,7 @@ func main() {
 	// fmt.Println("KAIF")
 
 	userRepo := repository.NewUserRepository(psql)
-	authRepo := repository.NewAuthRepository(psql)
+	authRepo := repository.NewAuthRepository(cfg)
 	srv := service.NewAuthService(userRepo, authRepo)
 	server := app.NewServer(cfg.Server.HTTPPort, srv)
 

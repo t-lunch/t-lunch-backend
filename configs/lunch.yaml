@@ -8,3 +8,8 @@ database:
 
 server:
   http_port: 8080
+
+jwt:
+  secret: "Zame4aLy8V78krE2"
+  access_expiration: 24
+  refresh_expiration: 30

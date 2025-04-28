@@ -2,35 +2,52 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/t-lunch/t-lunch-backend/pkg/postgres"
+	"github.com/t-lunch/t-lunch-backend/internal/config"
+	"github.com/t-lunch/t-lunch-backend/internal/models"
 )
 
 type AuthRepository struct {
-	db *postgres.DB
+	secret            string
+	accessExpiration  time.Duration
+	refreshExpiration time.Duration
 }
 
-func NewAuthRepository(db *postgres.DB) *AuthRepository {
-	return &AuthRepository{db: db}
-}
-
-func (r *AuthRepository) GenerateToken(ctx context.Context, secret string, expiration time.Duration, id int64) (string, error) {
-	payload := jwt.MapClaims{
-		"id":  id,
-		"exp": time.Now().Add(expiration).Unix(),
+func NewAuthRepository(cfg *config.Config) *AuthRepository {
+	return &AuthRepository{
+		secret:            cfg.Jwt.Secret,
+		accessExpiration:  time.Hour * time.Duration(cfg.Jwt.AccessExpiration),
+		refreshExpiration: time.Hour * 24 * time.Duration(cfg.Jwt.RefreshExpiration),
 	}
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
-	return token.SignedString([]byte(secret))
 }
 
-func (r *AuthRepository) ValidateToken(ctx context.Context, secret, token string) (int64, bool) {
+func (r *AuthRepository) GenerateToken(ctx context.Context, id int64, tokenType models.TokenType) (string, error) {
+	payload := jwt.MapClaims{
+		"id": id,
+	}
+
+	switch tokenType {
+	case models.Access:
+		payload["exp"] = time.Now().Add(r.accessExpiration).Unix()
+	case models.Refresh:
+		payload["exp"] = time.Now().Add(r.refreshExpiration).Unix()
+	default:
+		return "", errors.New("unknown token type")
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
+	return token.SignedString([]byte(r.secret))
+}
+
+func (r *AuthRepository) ValidateToken(ctx context.Context, token string) (int64, bool) {
 	jwtToken, err := jwt.ParseWithClaims(
 		token,
 		jwt.MapClaims{},
 		func(t *jwt.Token) (interface{}, error) {
-			return []byte(secret), nil
+			return []byte(r.secret), nil
 		},
 	)
 	if err != nil {

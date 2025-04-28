@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"time"
 
 	"github.com/t-lunch/t-lunch-backend/internal/models"
 	"golang.org/x/crypto/bcrypt"
@@ -12,12 +11,12 @@ import (
 
 type UserRepo interface {
 	CreateUser(ctx context.Context, user *models.User) error
-	GetUserPasswordByEmail(ctx context.Context, email string) (string, error)
+	GetUserPasswordByEmail(ctx context.Context, email string) (int64, string, error)
 }
 
 type AuthRepo interface {
-	GenerateToken(ctx context.Context, secret string, expiration time.Duration, id int64) (string, error)
-	ValidateToken(ctx context.Context, secret, token string) (int64, bool)
+	GenerateToken(ctx context.Context, id int64, tokenType models.TokenType) (string, error)
+	ValidateToken(ctx context.Context, token string) (int64, bool)
 }
 
 type AuthService struct {
@@ -37,7 +36,7 @@ func (s *AuthService) Registration(ctx context.Context, user *models.User) (*mod
 		return nil, errors.New("все поля обязательны")
 	}
 
-	if _, err := s.userRepo.GetUserPasswordByEmail(ctx, user.Email); err == nil {
+	if _, _, err := s.userRepo.GetUserPasswordByEmail(ctx, user.Email); err == nil {
 		return nil, errors.New("пользователь с таким email уже существует")
 	}
 
@@ -60,7 +59,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 		return "", "", errors.New("все поля обязательны")
 	}
 
-	hashedPassword, err := s.userRepo.GetUserPasswordByEmail(ctx, email)
+	id, hashedPassword, err := s.userRepo.GetUserPasswordByEmail(ctx, email)
 	if err != nil {
 		return "", "", errors.New("error userRepo: GetUserPasswordByEmail")
 	}
@@ -69,12 +68,12 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 		return "", "", errors.New("error: CompareHashAndPassword")
 	}
 
-	accessToken, err := s.authRepo.GenerateToken(ctx, "secret", time.Hour*24, 1)
+	accessToken, err := s.authRepo.GenerateToken(ctx, id, models.Access)
 	if err != nil {
 		return "", "", errors.New("error authRepo: GenerateToken access")
 	}
 
-	refreshToken, err := s.authRepo.GenerateToken(ctx, "secret", time.Hour*24*30, 1)
+	refreshToken, err := s.authRepo.GenerateToken(ctx, id, models.Refresh)
 	if err != nil {
 		return "", "", errors.New("error authRepo: GenerateToken refresh")
 	}
@@ -87,12 +86,12 @@ func (s *AuthService) Refresh(ctx context.Context, token string) (string, error)
 		return "", errors.New("все поля обязательны")
 	}
 
-	id, ok := s.authRepo.ValidateToken(ctx, "secret", token)
+	id, ok := s.authRepo.ValidateToken(ctx, token)
 	if !ok {
 		return "", fmt.Errorf("error authRepo: ValidateToken %d", id)
 	}
 
-	accessToken, err := s.authRepo.GenerateToken(ctx, "secret", time.Hour*24, id)
+	accessToken, err := s.authRepo.GenerateToken(ctx, id, models.Access)
 	if err != nil {
 		return "", errors.New("error authRepo: GenerateToken access")
 	}

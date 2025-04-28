@@ -4,10 +4,11 @@ import "time"
 
 type Lunch struct {
 	ID                   int64
-	Creator              int64
-	Time                 time.Duration
+	CreatorName          string
+	CreatorSurname       string
 	Place                string
-	Optional             string
-	Participants         []int64
+	Time                 time.Duration
 	NumberOfParticipants int64
+	Description          *string
+	Participants         []*User
 }

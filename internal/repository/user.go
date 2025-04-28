@@ -29,17 +29,18 @@ func (r *UserRepository) CreateUser(ctx context.Context, user *models.User) erro
 	return nil
 }
 
-func (r *UserRepository) GetUserPasswordByEmail(ctx context.Context, email string) (string, error) {
+func (r *UserRepository) GetUserPasswordByEmail(ctx context.Context, email string) (int64, string, error) {
+	var id int64
 	var hashedPassword string
 	query := `
-        SELECT password
+        SELECT id, password
         FROM users
         WHERE email = $1`
 	row := r.db.Pool.QueryRow(ctx, query, email)
-	err := row.Scan(&hashedPassword)
+	err := row.Scan(&id, &hashedPassword)
 	if err != nil {
-		return "", err
+		return 0, "", err
 	}
 
-	return hashedPassword, nil
+	return id, hashedPassword, nil
 }

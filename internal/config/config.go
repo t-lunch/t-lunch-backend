@@ -11,9 +11,16 @@ type Config struct {
 		DBName   string `mapstructure:"dbname"`
 		SSLMode  string `mapstructure:"sslmode"`
 	} `mapstructure:"database"`
+
 	Server struct {
 		HTTPPort int `mapstructure:"http_port"`
 	} `mapstructure:"server"`
+
+	Jwt struct {
+		Secret            string `mapstructure:"secret"`
+		AccessExpiration  int    `mapstructure:"access_expiration"`
+		RefreshExpiration int    `mapstructure:"refresh_expiration"`
+	} `mapstructure:"jwt"`
 }
 
 func NewConfig(configName string) (*Config, error) {
