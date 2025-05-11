@@ -1,50 +1,37 @@
 package repository
 
-// import (
-// 	"context"
+import (
+	"context"
 
-// 	"github.com/t-lunch/t-lunch-backend/internal/models"
+	"github.com/t-lunch/t-lunch-backend/internal/models"
+	"gorm.io/gorm"
+)
 
-// 	"database/sql"
-// )
+type LunchRepository struct {
+	db *gorm.DB
+}
 
-// type lunchRepository struct {
-// 	db *sql.DB
-// }
+func NewLunchRepository(db *gorm.DB) *LunchRepository {
+	return &LunchRepository{db: db}
+}
 
-// func NewLunchRepository(db *sql.DB) LunchRepository {
-// 	return &lunchRepository{db: db}
-// }
+func (r *LunchRepository) CreateLunch(ctx context.Context, lunch *models.Lunch) error {
+	return r.db.WithContext(ctx).Create(lunch).Error
+}
 
-// func (r *lunchRepository) CreateLunch(ctx context.Context, lunch *models.Lunch) error {
-// 	query := `INSERT INTO lunches (name, surname, place, time, description, number_of_participants)
-// 	          VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
-// 	err := r.db.QueryRowContext(ctx, query, lunch.Name, lunch.Surname, lunch.Place, lunch.Time, lunch.Description, lunch.NumberOfParticipants).Scan(&lunch.ID)
-// 	return err
-// }
+func (r *LunchRepository) GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, error) {
+	var lunches []*models.Lunch
+	err := r.db.WithContext(ctx).
+		Preload("Creator").
+		Offset(offset).
+		Limit(limit).
+		Find(&lunches).Error
+	if err != nil {
+		return nil, err
+	}
 
-// func (r *lunchRepository) GetLunches(ctx context.Context, userID int64, offset, limit int) ([]models.Lunch, error) {
-// 	var lunches []models.Lunch
-// 	query := `SELECT id, name, surname, place, time, number_of_participants, description
-// 	          FROM lunches ORDER BY time DESC LIMIT $1 OFFSET $2`
-// 	rows, err := r.db.QueryContext(ctx, query, userID, limit, offset)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
-
-// 	for rows.Next() {
-// 		var lunch models.Lunch
-// 		if err := rows.Scan(&lunch.Field1, &lunch.Field2, &lunch.Field3); err != nil {
-// 			return nil, err
-// 		}
-// 		lunches = append(lunches, lunch)
-// 	}
-// 	if err := rows.Err(); err != nil {
-// 		return nil, err
-// 	}
-// 	return lunches, err
-// }
+	return lunches, nil
+}
 
 // func (r *lunchRepository) GetLunchByID(ctx context.Context, lunchID int64) (*models.Lunch, error) {
 // 	var lunch models.Lunch

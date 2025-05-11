@@ -15,11 +15,11 @@ type Server struct {
 	restServer *http.Server
 }
 
-func NewServer(restPort int, service transport.AuthService) *Server {
-	authSrv := transport.NewAuthTransport(service)
-
-	restServer := runtime.NewServeMux()
-	if err := tlunch.RegisterTlunchHandlerServer(context.Background(), restServer, authSrv); err != nil {
+func NewServer(restPort int, protectedURL []string, srv *transport.TLunchServer) *Server {
+	restServer := runtime.NewServeMux(
+		runtime.WithMiddlewares(transport.AuthMiddleware(protectedURL)),
+	)
+	if err := tlunch.RegisterTlunchHandlerServer(context.Background(), restServer, srv); err != nil {
 		fmt.Printf("Failed to listen rest: %s\n", err)
 	}
 

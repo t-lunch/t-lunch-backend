@@ -11,7 +11,8 @@ import (
 	"github.com/t-lunch/t-lunch-backend/internal/config"
 	"github.com/t-lunch/t-lunch-backend/internal/repository"
 	"github.com/t-lunch/t-lunch-backend/internal/service"
-	"github.com/t-lunch/t-lunch-backend/pkg/postgres"
+	"github.com/t-lunch/t-lunch-backend/internal/transport"
+	"github.com/t-lunch/t-lunch-backend/pkg/gorm"
 )
 
 var cfgName string = "lunch"
@@ -23,9 +24,9 @@ func main() {
 		return
 	}
 
-	psql, err := postgres.NewDB(
+	gormDB, err := gorm.NewGormDB(
 		context.Background(),
-		fmt.Sprintf("postgres://%s:%s@postgres:%s/%s?sslmode=disable", cfg.Database.User, cfg.Database.Password, cfg.Database.Port, cfg.Database.DBName),
+		fmt.Sprintf("host=postgres user=%s password=%s dbname=%s port=%s sslmode=disable", cfg.Database.User, cfg.Database.Password, cfg.Database.DBName, cfg.Database.Port),
 	)
 	if err != nil {
 		fmt.Println("error: NewDB")
@@ -34,10 +35,14 @@ func main() {
 
 	// fmt.Println("KAIF")
 
-	userRepo := repository.NewUserRepository(psql)
-	authRepo := repository.NewAuthRepository(cfg)
-	srv := service.NewAuthService(userRepo, authRepo)
-	server := app.NewServer(cfg.Server.HTTPPort, srv)
+	repos, err := repository.NewTLunchRepos(cfg, gormDB)
+	if err != nil {
+		fmt.Println("error: repos")
+		return
+	}
+	services := service.NewTLunchServices(repos)
+	transports := transport.NewTLunchServer(services)
+	server := app.NewServer(cfg.Server.HTTPPort, cfg.ProtectedUrl, transports)
 
 	gracefulShutdown := make(chan os.Signal, 1)
 	signal.Notify(gracefulShutdown, syscall.SIGTERM, syscall.SIGINT)

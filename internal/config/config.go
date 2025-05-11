@@ -21,6 +21,8 @@ type Config struct {
 		AccessExpiration  int    `mapstructure:"access_expiration"`
 		RefreshExpiration int    `mapstructure:"refresh_expiration"`
 	} `mapstructure:"jwt"`
+
+	ProtectedUrl []string `mapstructure:"protected_url"`
 }
 
 func NewConfig(configName string) (*Config, error) {
