@@ -32,7 +32,7 @@ func (r *UserRepository) GetUserPasswordByEmail(ctx context.Context, email strin
 	return user.ID, user.HashedPassword, nil
 }
 
-func (r *UserRepository) IsUserExistsByEmail(ctx context.Context, email string) (bool, error) {
+func (r *UserRepository) IsUserWithEmailExist(ctx context.Context, email string) (bool, error) {
 	var count int64
 	err := r.db.WithContext(ctx).
 		Model(&models.User{}).

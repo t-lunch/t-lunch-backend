@@ -12,7 +12,7 @@ import (
 type UserRepo interface {
 	CreateUser(ctx context.Context, user *models.User) error
 	GetUserPasswordByEmail(ctx context.Context, email string) (int64, string, error)
-	IsUserExistsByEmail(ctx context.Context, email string) (bool, error)
+	IsUserWithEmailExist(ctx context.Context, email string) (bool, error)
 }
 
 type AuthRepo interface {
@@ -37,7 +37,7 @@ func (s *AuthService) Registration(ctx context.Context, user *models.User) (*mod
 		return nil, errors.New("все поля обязательны")
 	}
 
-	exists, err := s.userRepo.IsUserExistsByEmail(ctx, user.Email)
+	exists, err := s.userRepo.IsUserWithEmailExist(ctx, user.Email)
 	if err != nil {
 		return nil, errors.New("error userRepo: IsUserExistsByEmail")
 	}

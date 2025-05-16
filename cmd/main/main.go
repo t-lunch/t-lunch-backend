@@ -33,8 +33,6 @@ func main() {
 		return
 	}
 
-	// fmt.Println("KAIF")
-
 	repos, err := repository.NewTLunchRepos(cfg, gormDB)
 	if err != nil {
 		fmt.Println("error: repos")

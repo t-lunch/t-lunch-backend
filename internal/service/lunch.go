@@ -60,6 +60,9 @@ func (s *LunchService) GetLunches(ctx context.Context, userID int64, offset, lim
 	if limit <= 0 {
 		limit = 5
 	}
+	if limit > 10 {
+		limit = 10
+	}
 
 	lunches, err := s.lunchRepo.GetLunches(ctx, userID, offset, limit)
 	if err != nil {
