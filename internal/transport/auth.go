@@ -9,7 +9,7 @@ import (
 )
 
 type AuthService interface {
-	Registration(ctx context.Context, user *models.User) (*models.User, error)
+	Register(ctx context.Context, user *models.User) (*models.User, error)
 	Login(ctx context.Context, email, password string) (string, string, error)
 	Refresh(ctx context.Context, token string, userId int64) (string, error)
 }
@@ -23,7 +23,7 @@ func NewAuthTransport(authService AuthService) *AuthTransport {
 	return &AuthTransport{authService: authService}
 }
 
-func (t *AuthTransport) Registration(ctx context.Context, request *tlunch.RegistrationRequest) (*tlunch.User, error) {
+func (t *AuthTransport) Register(ctx context.Context, request *tlunch.RegisterRequest) (*tlunch.User, error) {
 	user := &models.User{
 		Name:           request.GetName(),
 		Surname:        request.GetSurname(),
@@ -34,7 +34,7 @@ func (t *AuthTransport) Registration(ctx context.Context, request *tlunch.Regist
 		HashedPassword: request.GetPassword(),
 	}
 
-	response, err := t.authService.Registration(ctx, user)
+	response, err := t.authService.Register(ctx, user)
 	if err != nil {
 		return nil, err
 	}

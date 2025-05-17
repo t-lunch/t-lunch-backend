@@ -19,7 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Tlunch_Registration_FullMethodName    = "/tlunch.Tlunch/Registration"
+	Tlunch_Register_FullMethodName        = "/tlunch.Tlunch/Register"
 	Tlunch_Login_FullMethodName           = "/tlunch.Tlunch/Login"
 	Tlunch_Refresh_FullMethodName         = "/tlunch.Tlunch/Refresh"
 	Tlunch_GetProfile_FullMethodName      = "/tlunch.Tlunch/GetProfile"
@@ -37,7 +37,7 @@ const (
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type TlunchClient interface {
-	Registration(ctx context.Context, in *RegistrationRequest, opts ...grpc.CallOption) (*User, error)
+	Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*User, error)
 	Login(ctx context.Context, in *LoginRequest, opts ...grpc.CallOption) (*LoginResponse, error)
 	Refresh(ctx context.Context, in *RefreshRequest, opts ...grpc.CallOption) (*RefreshResponse, error)
 	GetProfile(ctx context.Context, in *UserRequest, opts ...grpc.CallOption) (*User, error)
@@ -59,10 +59,10 @@ func NewTlunchClient(cc grpc.ClientConnInterface) TlunchClient {
 	return &tlunchClient{cc}
 }
 
-func (c *tlunchClient) Registration(ctx context.Context, in *RegistrationRequest, opts ...grpc.CallOption) (*User, error) {
+func (c *tlunchClient) Register(ctx context.Context, in *RegisterRequest, opts ...grpc.CallOption) (*User, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
 	out := new(User)
-	err := c.cc.Invoke(ctx, Tlunch_Registration_FullMethodName, in, out, cOpts...)
+	err := c.cc.Invoke(ctx, Tlunch_Register_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (c *tlunchClient) RateLunch(ctx context.Context, in *RateLunchRequest, opts
 // All implementations must embed UnimplementedTlunchServer
 // for forward compatibility.
 type TlunchServer interface {
-	Registration(context.Context, *RegistrationRequest) (*User, error)
+	Register(context.Context, *RegisterRequest) (*User, error)
 	Login(context.Context, *LoginRequest) (*LoginResponse, error)
 	Refresh(context.Context, *RefreshRequest) (*RefreshResponse, error)
 	GetProfile(context.Context, *UserRequest) (*User, error)
@@ -205,8 +205,8 @@ type TlunchServer interface {
 // pointer dereference when methods are called.
 type UnimplementedTlunchServer struct{}
 
-func (UnimplementedTlunchServer) Registration(context.Context, *RegistrationRequest) (*User, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Registration not implemented")
+func (UnimplementedTlunchServer) Register(context.Context, *RegisterRequest) (*User, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Register not implemented")
 }
 func (UnimplementedTlunchServer) Login(context.Context, *LoginRequest) (*LoginResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Login not implemented")
@@ -262,20 +262,20 @@ func RegisterTlunchServer(s grpc.ServiceRegistrar, srv TlunchServer) {
 	s.RegisterService(&Tlunch_ServiceDesc, srv)
 }
 
-func _Tlunch_Registration_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RegistrationRequest)
+func _Tlunch_Register_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RegisterRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(TlunchServer).Registration(ctx, in)
+		return srv.(TlunchServer).Register(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: Tlunch_Registration_FullMethodName,
+		FullMethod: Tlunch_Register_FullMethodName,
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(TlunchServer).Registration(ctx, req.(*RegistrationRequest))
+		return srv.(TlunchServer).Register(ctx, req.(*RegisterRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -486,8 +486,8 @@ var Tlunch_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*TlunchServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Registration",
-			Handler:    _Tlunch_Registration_Handler,
+			MethodName: "Register",
+			Handler:    _Tlunch_Register_Handler,
 		},
 		{
 			MethodName: "Login",

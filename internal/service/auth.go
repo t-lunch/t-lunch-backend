@@ -32,7 +32,7 @@ func NewAuthService(userRepo UserRepo, authRepo AuthRepo) *AuthService {
 	}
 }
 
-func (s *AuthService) Registration(ctx context.Context, user *models.User) (*models.User, error) {
+func (s *AuthService) Register(ctx context.Context, user *models.User) (*models.User, error) {
 	if user.Name == "" || user.Surname == "" || user.Tg == "" || user.Office == "" || user.Emoji == "" || user.Email == "" || user.HashedPassword == "" {
 		return nil, errors.New("все поля обязательны")
 	}

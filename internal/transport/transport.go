@@ -20,8 +20,8 @@ func NewTLunchServer(services *service.TLunchServices) *TLunchServer {
 	}
 }
 
-func (t *TLunchServer) Registration(ctx context.Context, request *tlunch.RegistrationRequest) (*tlunch.User, error) {
-	return t.AuthTransport.Registration(ctx, request)
+func (t *TLunchServer) Register(ctx context.Context, request *tlunch.RegisterRequest) (*tlunch.User, error) {
+	return t.AuthTransport.Register(ctx, request)
 }
 
 func (t *TLunchServer) Login(ctx context.Context, request *tlunch.LoginRequest) (*tlunch.LoginResponse, error) {

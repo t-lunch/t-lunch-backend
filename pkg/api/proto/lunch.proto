@@ -8,7 +8,7 @@ import "google/timestamp.proto";
 package tlunch;
 
 service Tlunch {
-    rpc Registration (RegistrationRequest) returns (User) {
+    rpc Register (RegisterRequest) returns (User) {
         option (google.api.http) = {
             post: "/v1/signup"
             body: "*"
@@ -89,7 +89,7 @@ service Tlunch {
     }
 }
 
-message RegistrationRequest {
+message RegisterRequest {
     string name = 1;
     string surname = 2;
     string tg = 3;
