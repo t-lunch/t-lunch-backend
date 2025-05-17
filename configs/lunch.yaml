@@ -1,0 +1,17 @@
+database:
+  host: "localhost"
+  port: "5432"
+  user: "tusers"
+  password: "tstrongpassword"
+  dbname: "tlunch"
+  sslmode: "disable"
+
+server:
+  http_port: 8080
+
+jwt:
+  secret: "Zame4aLy8V78krE2"
+  access_expiration: 24
+  refresh_expiration: 30
+
+protected_url: ["/v1/signup", "/v1/signin", "/v1/refresh"]
