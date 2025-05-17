@@ -12,7 +12,7 @@ import (
 
 type LunchService interface {
 	CreateLunch(ctx context.Context, userID int64, place string, lunchTime time.Time, description string) (*models.Lunch, error)
-	GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, error)
+	GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, int64, error)
 }
 
 type LunchTransport struct {
@@ -36,6 +36,10 @@ func (t *LunchTransport) CreateLunch(ctx context.Context, request *tlunch.Create
 		return nil, err
 	}
 	rsafe := pointer.Get(response)
+	var description *string = nil
+	if rsafe.Description != "" {
+		description = &rsafe.Description
+	}
 	return &tlunch.LunchResponse{
 		Lunch: &tlunch.Lunch{
 			Id:                   rsafe.ID,
@@ -44,23 +48,14 @@ func (t *LunchTransport) CreateLunch(ctx context.Context, request *tlunch.Create
 			Place:                rsafe.Place,
 			Time:                 timestamppb.New(rsafe.Time),
 			NumberOfParticipants: rsafe.NumberOfParticipants,
-			Description:          rsafe.Description,
-			Users: []*tlunch.User{
-				&tlunch.User{
-					UserId:  rsafe.Creator.ID,
-					Name:    rsafe.Creator.Name,
-					Surname: rsafe.Creator.Surname,
-					Tg:      rsafe.Creator.Tg,
-					Office:  rsafe.Creator.Office,
-					Emoji:   rsafe.Creator.Emoji,
-				},
-			},
+			Description:          description,
+			UsersId:              rsafe.Participants,
 		},
 	}, nil
 }
 
 func (t *LunchTransport) GetLunches(ctx context.Context, request *tlunch.LunchRequest) (*tlunch.GetLunchesResponse, error) {
-	response, err := t.lunchService.GetLunches(
+	response, lunchID, err := t.lunchService.GetLunches(
 		ctx,
 		request.GetUserId(),
 		int(request.GetOffset()),
@@ -73,8 +68,15 @@ func (t *LunchTransport) GetLunches(ctx context.Context, request *tlunch.LunchRe
 		Lunches: make([]*tlunch.Lunch, len(response)),
 		LunchId: nil,
 	}
+	if lunchID > 0 {
+		lunchesResponse.LunchId = &lunchID
+	}
 	for i, lunch := range response {
 		rsafe := pointer.Get(lunch)
+		var description *string = nil
+		if rsafe.Description != "" {
+			description = &rsafe.Description
+		}
 		lunchesResponse.Lunches[i] = &tlunch.Lunch{
 			Id:                   rsafe.ID,
 			Name:                 rsafe.Creator.Name,
@@ -82,8 +84,8 @@ func (t *LunchTransport) GetLunches(ctx context.Context, request *tlunch.LunchRe
 			Place:                rsafe.Place,
 			Time:                 timestamppb.New(rsafe.Time),
 			NumberOfParticipants: rsafe.NumberOfParticipants,
-			Description:          rsafe.Description,
-			Users:                nil,
+			Description:          description,
+			UsersId:              rsafe.Participants,
 		}
 	}
 	return lunchesResponse, nil

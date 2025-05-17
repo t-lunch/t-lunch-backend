@@ -86,13 +86,13 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 	return accessToken, refreshToken, nil
 }
 
-func (s *AuthService) Refresh(ctx context.Context, token string) (string, error) {
+func (s *AuthService) Refresh(ctx context.Context, token string, userId int64) (string, error) {
 	if token == "" {
 		return "", errors.New("все поля обязательны")
 	}
 
 	id, ok := s.authRepo.ValidateToken(ctx, token)
-	if !ok {
+	if !ok || id != userId {
 		return "", fmt.Errorf("error authRepo: ValidateToken %d", id)
 	}
 

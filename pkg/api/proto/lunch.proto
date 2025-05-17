@@ -69,7 +69,7 @@ service Tlunch {
         };
     }
 
-    rpc GetDetailLunch (DetailLunchRequest) returns (LunchResponse) {
+    rpc GetDetailLunch (DetailLunchRequest) returns (DetailLunchResponse) {
         option (google.api.http) = {
             get: "/v1/lunch/{lunch_id}"
         };
@@ -120,6 +120,7 @@ message LoginResponse {
 
 message RefreshRequest {
     string refresh_token = 1;
+    int64 user_id = 2;
 }
 
 message RefreshResponse {
@@ -134,7 +135,7 @@ message Lunch {
     google.protobuf.Timestamp time = 5;
     int64 number_of_participants = 6;
     optional string description = 7;
-    repeated User users = 8;
+    repeated int64 users_id = 8;
 }
 
 message LunchFeedback {
@@ -161,7 +162,7 @@ message CreateLunchRequest {
     int64 user_id = 1;
     string place = 2;
     google.protobuf.Timestamp time = 3;
-    string description = 4;
+    optional string description = 4;
 }
 
 message LunchResponse {
@@ -175,6 +176,12 @@ message ActionLunchRequest {
 
 message DetailLunchRequest {
     int64 lunch_id = 1;
+    repeated int64 users_id = 2;
+}
+
+message DetailLunchResponse {
+    Lunch lunch = 1;
+    repeated User users = 2;
 }
 
 message LunchHistoryResponse {

@@ -2,7 +2,6 @@ package transport
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/t-lunch/t-lunch-backend/internal/service"
 	tlunch "github.com/t-lunch/t-lunch-backend/pkg/api/generated"
@@ -34,7 +33,6 @@ func (t *TLunchServer) Refresh(ctx context.Context, request *tlunch.RefreshReque
 }
 
 func (t *TLunchServer) CreateLunch(ctx context.Context, request *tlunch.CreateLunchRequest) (*tlunch.LunchResponse, error) {
-	fmt.Println("SERVER:", request)
 	return t.LunchTransport.CreateLunch(ctx, request)
 }
 

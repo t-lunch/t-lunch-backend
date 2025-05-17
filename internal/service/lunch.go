@@ -6,11 +6,14 @@ import (
 	"time"
 
 	"github.com/t-lunch/t-lunch-backend/internal/models"
+	"gorm.io/gorm"
 )
 
 type LunchRepo interface {
 	CreateLunch(ctx context.Context, lunch *models.Lunch) error
 	GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, error)
+	GetLunchByID(ctx context.Context, id int64) (*models.Lunch, error)
+	GetLunchIdByUserID(ctx context.Context, userID int64) (int64, error)
 }
 
 type LunchService struct {
@@ -37,7 +40,7 @@ func (s *LunchService) CreateLunch(ctx context.Context, userID int64, place stri
 		Place:                place,
 		Time:                 lunchTime,
 		NumberOfParticipants: 1,
-		Description:          &description,
+		Description:          description,
 		Participants:         []int64{userID},
 	}
 
@@ -46,12 +49,17 @@ func (s *LunchService) CreateLunch(ctx context.Context, userID int64, place stri
 		return nil, errors.New("error lunchRepo: CreateLunch")
 	}
 
-	return lunch, nil
+	createdLunch, err := s.lunchRepo.GetLunchByID(ctx, lunch.ID)
+	if err != nil {
+		return nil, errors.New("error lunchRepo: GetLunchByID")
+	}
+
+	return createdLunch, nil
 }
 
-func (s *LunchService) GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, error) {
+func (s *LunchService) GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, int64, error) {
 	if userID <= 0 {
-		return nil, errors.New("invalid userID")
+		return nil, 0, errors.New("invalid userID")
 	}
 
 	if offset < 0 {
@@ -64,12 +72,17 @@ func (s *LunchService) GetLunches(ctx context.Context, userID int64, offset, lim
 		limit = 10
 	}
 
-	lunches, err := s.lunchRepo.GetLunches(ctx, userID, offset, limit)
-	if err != nil {
-		return nil, errors.New("error lunchRepo: GetLunches")
+	lunchID, err := s.lunchRepo.GetLunchIdByUserID(ctx, userID)
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, 0, errors.New("error lunchRepo: GetLunchIdByUserID")
 	}
 
-	return lunches, nil
+	lunches, err := s.lunchRepo.GetLunches(ctx, userID, offset, limit)
+	if err != nil {
+		return nil, 0, errors.New("error lunchRepo: GetLunches")
+	}
+
+	return lunches, lunchID, nil
 }
 
 func ValidTime(ctx context.Context, now, lunchTime time.Time) bool {

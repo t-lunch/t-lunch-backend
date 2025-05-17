@@ -11,7 +11,7 @@ import (
 type AuthService interface {
 	Registration(ctx context.Context, user *models.User) (*models.User, error)
 	Login(ctx context.Context, email, password string) (string, string, error)
-	Refresh(ctx context.Context, token string) (string, error)
+	Refresh(ctx context.Context, token string, userId int64) (string, error)
 }
 
 type AuthTransport struct {
@@ -61,7 +61,7 @@ func (t *AuthTransport) Login(ctx context.Context, request *tlunch.LoginRequest)
 }
 
 func (t *AuthTransport) Refresh(ctx context.Context, request *tlunch.RefreshRequest) (*tlunch.RefreshResponse, error) {
-	accessToken, err := t.authService.Refresh(ctx, request.GetRefreshToken())
+	accessToken, err := t.authService.Refresh(ctx, request.GetRefreshToken(), request.GetUserId())
 	if err != nil {
 		return nil, err
 	}

@@ -46,7 +46,7 @@ type TlunchClient interface {
 	CreateLunch(ctx context.Context, in *CreateLunchRequest, opts ...grpc.CallOption) (*LunchResponse, error)
 	JoinLunch(ctx context.Context, in *ActionLunchRequest, opts ...grpc.CallOption) (*LunchResponse, error)
 	LeaveLunch(ctx context.Context, in *ActionLunchRequest, opts ...grpc.CallOption) (*LunchResponse, error)
-	GetDetailLunch(ctx context.Context, in *DetailLunchRequest, opts ...grpc.CallOption) (*LunchResponse, error)
+	GetDetailLunch(ctx context.Context, in *DetailLunchRequest, opts ...grpc.CallOption) (*DetailLunchResponse, error)
 	GetLunchHistory(ctx context.Context, in *LunchRequest, opts ...grpc.CallOption) (*LunchHistoryResponse, error)
 	RateLunch(ctx context.Context, in *RateLunchRequest, opts ...grpc.CallOption) (*LunchFeedback, error)
 }
@@ -149,9 +149,9 @@ func (c *tlunchClient) LeaveLunch(ctx context.Context, in *ActionLunchRequest, o
 	return out, nil
 }
 
-func (c *tlunchClient) GetDetailLunch(ctx context.Context, in *DetailLunchRequest, opts ...grpc.CallOption) (*LunchResponse, error) {
+func (c *tlunchClient) GetDetailLunch(ctx context.Context, in *DetailLunchRequest, opts ...grpc.CallOption) (*DetailLunchResponse, error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(LunchResponse)
+	out := new(DetailLunchResponse)
 	err := c.cc.Invoke(ctx, Tlunch_GetDetailLunch_FullMethodName, in, out, cOpts...)
 	if err != nil {
 		return nil, err
@@ -192,7 +192,7 @@ type TlunchServer interface {
 	CreateLunch(context.Context, *CreateLunchRequest) (*LunchResponse, error)
 	JoinLunch(context.Context, *ActionLunchRequest) (*LunchResponse, error)
 	LeaveLunch(context.Context, *ActionLunchRequest) (*LunchResponse, error)
-	GetDetailLunch(context.Context, *DetailLunchRequest) (*LunchResponse, error)
+	GetDetailLunch(context.Context, *DetailLunchRequest) (*DetailLunchResponse, error)
 	GetLunchHistory(context.Context, *LunchRequest) (*LunchHistoryResponse, error)
 	RateLunch(context.Context, *RateLunchRequest) (*LunchFeedback, error)
 	mustEmbedUnimplementedTlunchServer()
@@ -232,7 +232,7 @@ func (UnimplementedTlunchServer) JoinLunch(context.Context, *ActionLunchRequest)
 func (UnimplementedTlunchServer) LeaveLunch(context.Context, *ActionLunchRequest) (*LunchResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method LeaveLunch not implemented")
 }
-func (UnimplementedTlunchServer) GetDetailLunch(context.Context, *DetailLunchRequest) (*LunchResponse, error) {
+func (UnimplementedTlunchServer) GetDetailLunch(context.Context, *DetailLunchRequest) (*DetailLunchResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetDetailLunch not implemented")
 }
 func (UnimplementedTlunchServer) GetLunchHistory(context.Context, *LunchRequest) (*LunchHistoryResponse, error) {
