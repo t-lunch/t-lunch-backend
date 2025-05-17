@@ -1,9 +1,8 @@
 package repository
 
 import (
-	"errors"
-
 	"github.com/t-lunch/t-lunch-backend/internal/config"
+	"github.com/t-lunch/t-lunch-backend/internal/errors"
 	"gorm.io/gorm"
 )
 
@@ -15,10 +14,10 @@ type TLunchRepos struct {
 
 func NewTLunchRepos(cfg *config.Config, db *gorm.DB) (*TLunchRepos, error) {
 	if cfg == nil {
-		return nil, errors.New("cfg is nil")
+		return nil, errors.ErrConfigIsNil
 	}
 	if db == nil {
-		return nil, errors.New("db is nil")
+		return nil, errors.ErrDBIsNil
 	}
 	return &TLunchRepos{
 		AuthRepo:  NewAuthRepository(cfg),
