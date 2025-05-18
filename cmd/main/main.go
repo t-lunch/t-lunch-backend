@@ -13,14 +13,24 @@ import (
 	"github.com/t-lunch/t-lunch-backend/internal/service"
 	"github.com/t-lunch/t-lunch-backend/internal/transport"
 	"github.com/t-lunch/t-lunch-backend/pkg/gorm"
+	"github.com/t-lunch/t-lunch-backend/pkg/logger"
+	"go.uber.org/zap"
 )
 
 var cfgName string = "lunch"
 
 func main() {
+	zapLogger, err := logger.NewZapLogger()
+	if err != nil {
+		fmt.Printf("error NewZapLogger: %v\n", err)
+		return
+	}
+
+	defer zapLogger.Sync()
+
 	cfg, err := config.NewConfig(cfgName)
 	if err != nil {
-		fmt.Println("error: NewCfg")
+		zapLogger.Error("error NewConfig", zap.Error(err))
 		return
 	}
 
@@ -29,33 +39,35 @@ func main() {
 		fmt.Sprintf("host=postgres user=%s password=%s dbname=%s port=%s sslmode=disable", cfg.Database.User, cfg.Database.Password, cfg.Database.DBName, cfg.Database.Port),
 	)
 	if err != nil {
-		fmt.Println("error: NewDB")
+		zapLogger.Error("error NewGormDB", zap.Error(err))
 		return
 	}
 
 	repos, err := repository.NewTLunchRepos(cfg, gormDB)
 	if err != nil {
-		fmt.Println("error: repos")
+		zapLogger.Error("error NewTLunchRepos", zap.Error(err))
 		return
 	}
 	services := service.NewTLunchServices(repos)
-	transports := transport.NewTLunchServer(services)
+	transports := transport.NewTLunchServer(services, zapLogger)
 	server := app.NewServer(cfg.Server.HTTPPort, cfg.ProtectedUrl, transports)
 
 	gracefulShutdown := make(chan os.Signal, 1)
 	signal.Notify(gracefulShutdown, syscall.SIGTERM, syscall.SIGINT)
 
+	zapLogger.Info("server started", zap.String("server", "TLunch"), zap.Int("port", cfg.Server.HTTPPort))
+
 	go func() {
 		if err := server.Start(); err != nil {
-			fmt.Printf("Failed to start: %s\n", err)
+			zapLogger.Error("failed to start", zap.Error(err))
 		}
 	}()
 
 	<-gracefulShutdown
 
 	if err := server.Stop(); err != nil {
-		fmt.Printf("Failed to graceful stop: %s\n", err)
+		zapLogger.Error("failed to graceful stop", zap.Error(err))
 	}
 
-	fmt.Println("Server Stopped")
+	zapLogger.Info("server stopped graceful", zap.String("server", "TLunch"), zap.Int("port", cfg.Server.HTTPPort))
 }
