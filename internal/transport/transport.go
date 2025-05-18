@@ -17,7 +17,7 @@ type TLunchServer struct {
 func NewTLunchServer(services *service.TLunchServices, zapLogger *zap.Logger) *TLunchServer {
 	return &TLunchServer{
 		AuthTransport:  NewAuthTransport(services.AuthService, zapLogger),
-		LunchTransport: NewLunchTransport(services.LunchService, zapLogger),
+		LunchTransport: NewLunchTransport(services.LunchService, services.UserService, zapLogger),
 	}
 }
 
@@ -39,4 +39,8 @@ func (t *TLunchServer) CreateLunch(ctx context.Context, request *tlunch.CreateLu
 
 func (t *TLunchServer) GetLunches(ctx context.Context, request *tlunch.LunchRequest) (*tlunch.GetLunchesResponse, error) {
 	return t.LunchTransport.GetLunches(ctx, request)
+}
+
+func (t *TLunchServer) GetDetailLunch(ctx context.Context, request *tlunch.DetailLunchRequest) (*tlunch.DetailLunchResponse, error) {
+	return t.LunchTransport.GetDetailLunch(ctx, request)
 }

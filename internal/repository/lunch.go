@@ -40,6 +40,7 @@ func (r *LunchRepository) GetLunchByID(ctx context.Context, id int64) (*models.L
 	if err != nil {
 		return nil, err
 	}
+
 	return &lunch, nil
 }
 
@@ -52,6 +53,7 @@ func (r *LunchRepository) GetLunchIdByUserID(ctx context.Context, userID int64) 
 	if err != nil {
 		return 0, err
 	}
+
 	return lunch.ID, nil
 }
 

@@ -10,12 +10,6 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
-type UserRepo interface {
-	CreateUser(ctx context.Context, user *models.User) error
-	GetUserPasswordByEmail(ctx context.Context, email string) (int64, string, error)
-	IsUserWithEmailExist(ctx context.Context, email string) (bool, error)
-}
-
 type AuthRepo interface {
 	GenerateToken(ctx context.Context, id int64, tokenType models.TokenType) (string, error)
 	GetToken(ctx context.Context, token string) (jwt.MapClaims, error)

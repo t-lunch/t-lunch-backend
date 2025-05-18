@@ -10,3 +10,12 @@ type User struct {
 	Email          string `gorm:"column:email;unique;not null"`
 	HashedPassword string `gorm:"column:password;not null"`
 }
+
+type UserResponse struct {
+	ID      int64
+	Name    string
+	Surname string
+	Tg      string
+	Office  string
+	Emoji   string
+}
