@@ -6,15 +6,16 @@ import (
 )
 
 var (
-	ErrConfigIsNil        = errors.New("config is nil")
-	ErrDBIsNil            = errors.New("db is nil")
-	ErrUnknownTokenType   = errors.New("unknown token type")
-	ErrInvalidTokenClaims = errors.New("invalid token claims")
+	ErrConfigIsNil      = errors.New("config is nil")
+	ErrDBIsNil          = errors.New("db is nil")
+	ErrUnknownTokenType = errors.New("unknown token type")
+	ErrInvalidToken     = errors.New("invalid token")
 )
 
 var (
-	ErrInvalidRequest = errors.New("invalid request")
-	ErrTokenExpired   = errors.New("token expired")
+	ErrInvalidRequest  = errors.New("invalid request")
+	ErrInvalidPassword = errors.New("invalid password")
+	ErrTokenExpired    = errors.New("token expired")
 )
 
 type ErrRepository struct {

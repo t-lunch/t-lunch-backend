@@ -71,7 +71,7 @@ func (s *LunchService) GetLunches(ctx context.Context, userID int64, offset, lim
 	}
 
 	lunchID, err := s.lunchRepo.GetLunchIdByUserID(ctx, userID)
-	if err != nil && goerrors.Is(err, gorm.ErrRecordNotFound) {
+	if err != nil && !goerrors.Is(err, gorm.ErrRecordNotFound) {
 		return nil, 0, errors.NewErrRepository("lunchRepo", "GetLunchIdByUserID", err)
 	}
 

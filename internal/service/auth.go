@@ -71,7 +71,7 @@ func (s *AuthService) Login(ctx context.Context, email, password string) (string
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) != nil {
-		return "", "", errors.NewErrRepository("bcrypt", "CompareHashAndPassword", err)
+		return "", "", errors.NewErrRepository("bcrypt", "CompareHashAndPassword", errors.ErrInvalidPassword)
 	}
 
 	accessToken, err := s.authRepo.GenerateToken(ctx, id, models.Access)

@@ -51,12 +51,12 @@ func (r *AuthRepository) GetToken(ctx context.Context, token string) (jwt.MapCla
 		},
 	)
 	if err != nil {
-		return nil, err
+		return nil, errors.ErrInvalidToken
 	}
 
 	payload, ok := jwtToken.Claims.(jwt.MapClaims)
 	if !ok {
-		return nil, errors.ErrInvalidTokenClaims
+		return nil, errors.ErrInvalidToken
 	}
 
 	return payload, nil
