@@ -15,6 +15,7 @@ type LunchRepo interface {
 	GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, error)
 	GetLunchByID(ctx context.Context, id int64) (*models.Lunch, error)
 	GetLunchIdByUserID(ctx context.Context, userID int64) (int64, error)
+	UpdateLunchParticipants(ctx context.Context, method string, lunchID, userID int64) error
 }
 
 type LunchService struct {
@@ -96,19 +97,47 @@ func (s *LunchService) GetLunchByID(ctx context.Context, lunchID int64) (*models
 	return lunch, nil
 }
 
+func (s *LunchService) JoinLunch(ctx context.Context, lunchID, userID int64) (*models.Lunch, error) {
+	if lunchID <= 0 || userID <= 0 {
+		return nil, errors.ErrInvalidRequest
+	}
+
+	err := s.lunchRepo.UpdateLunchParticipants(ctx, "array_append", lunchID, userID)
+	if err != nil {
+		return nil, errors.NewErrRepository("lunchRepo", "UpdateLunchParticipants", err)
+	}
+
+	updatedLunch, err := s.lunchRepo.GetLunchByID(ctx, lunchID)
+	if err != nil {
+		return nil, errors.NewErrRepository("lunchRepo", "GetLunchByID", err)
+	}
+
+	return updatedLunch, nil
+}
+
+func (s *LunchService) LeaveLunch(ctx context.Context, lunchID, userID int64) (*models.Lunch, error) {
+	if lunchID <= 0 || userID <= 0 {
+		return nil, errors.ErrInvalidRequest
+	}
+
+	err := s.lunchRepo.UpdateLunchParticipants(ctx, "array_remove", lunchID, userID)
+	if err != nil {
+		return nil, errors.NewErrRepository("lunchRepo", "UpdateLunchParticipants", err)
+	}
+
+	updatedLunch, err := s.lunchRepo.GetLunchByID(ctx, lunchID)
+	if err != nil {
+		return nil, errors.NewErrRepository("lunchRepo", "GetLunchByID", err)
+	}
+
+	return updatedLunch, nil
+}
+
 func ValidTime(ctx context.Context, now, lunchTime time.Time) bool {
 	beginLunchTime := time.Date(now.Year(), now.Month(), now.Day(), 11, 0, 0, 0, now.Location())
 	endLunchTime := time.Date(now.Year(), now.Month(), now.Day(), 14, 0, 0, 0, now.Location())
 	return !lunchTime.Before(beginLunchTime) && !lunchTime.After(endLunchTime)
 }
-
-// func (s *TlunchService) JoinLunch(ctx context.Context, lunchID, userID int64) error {
-// 	return s.lunchRepo.JoinLunch(ctx, lunchID, userID)
-// }
-
-// func (s *TlunchService) LeaveLunch(ctx context.Context, lunchID, userID int64) error {
-// 	return s.lunchRepo.LeaveLunch(ctx, lunchID, userID)
-// }
 
 // func (s *TlunchService) GetLunchHistory(ctx context.Context, lunchID int64) (float64, error) {
 // 	return s.lunchRepo.GetLunchHistory(ctx, lunchID)
