@@ -19,10 +19,6 @@ type LunchService interface {
 	LeaveLunch(ctx context.Context, lunchID, userID int64) (*models.Lunch, error)
 }
 
-type UserService interface {
-	GetUsersByIDs(ctx context.Context, userIDs []int64) ([]*models.UserResponse, error)
-}
-
 type LunchTransport struct {
 	tlunch.UnimplementedTlunchServer
 	lunchService LunchService
