@@ -5,6 +5,7 @@ import (
 
 	"github.com/t-lunch/t-lunch-backend/internal/service"
 	tlunch "github.com/t-lunch/t-lunch-backend/pkg/api/generated"
+	"go.uber.org/zap"
 )
 
 type TLunchServer struct {
@@ -13,10 +14,10 @@ type TLunchServer struct {
 	LunchTransport *LunchTransport
 }
 
-func NewTLunchServer(services *service.TLunchServices) *TLunchServer {
+func NewTLunchServer(services *service.TLunchServices, zapLogger *zap.Logger) *TLunchServer {
 	return &TLunchServer{
-		AuthTransport:  NewAuthTransport(services.AuthService),
-		LunchTransport: NewLunchTransport(services.LunchService),
+		AuthTransport:  NewAuthTransport(services.AuthService, zapLogger),
+		LunchTransport: NewLunchTransport(services.LunchService, zapLogger),
 	}
 }
 

@@ -2,9 +2,10 @@ package service
 
 import (
 	"context"
-	"errors"
+	goerrors "errors"
 	"time"
 
+	"github.com/t-lunch/t-lunch-backend/internal/errors"
 	"github.com/t-lunch/t-lunch-backend/internal/models"
 	"gorm.io/gorm"
 )
@@ -25,15 +26,12 @@ func NewLunchService(lunchRepo LunchRepo) *LunchService {
 }
 
 func (s *LunchService) CreateLunch(ctx context.Context, userID int64, place string, lunchTime time.Time, description string) (*models.Lunch, error) {
-	if userID <= 0 {
-		return nil, errors.New("invalid userID")
+	if userID <= 0 || place == "" {
+		return nil, errors.ErrInvalidRequest
 	}
-	if place == "" {
-		return nil, errors.New("place is required")
-	}
-	if !ValidTime(ctx, time.Now(), lunchTime) {
-		return nil, errors.New("invalid lunch time")
-	}
+	// if !ValidTime(ctx, time.Now(), lunchTime) {
+	// 	return nil, errors.New("invalid lunch time")
+	// }
 
 	lunch := &models.Lunch{
 		CreatorID:            userID,
@@ -46,12 +44,12 @@ func (s *LunchService) CreateLunch(ctx context.Context, userID int64, place stri
 
 	err := s.lunchRepo.CreateLunch(ctx, lunch)
 	if err != nil {
-		return nil, errors.New("error lunchRepo: CreateLunch")
+		return nil, errors.NewErrRepository("lunchRepo", "CreateLunch", err)
 	}
 
 	createdLunch, err := s.lunchRepo.GetLunchByID(ctx, lunch.ID)
 	if err != nil {
-		return nil, errors.New("error lunchRepo: GetLunchByID")
+		return nil, errors.NewErrRepository("lunchRepo", "GetLunchByID", err)
 	}
 
 	return createdLunch, nil
@@ -59,7 +57,7 @@ func (s *LunchService) CreateLunch(ctx context.Context, userID int64, place stri
 
 func (s *LunchService) GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, int64, error) {
 	if userID <= 0 {
-		return nil, 0, errors.New("invalid userID")
+		return nil, 0, errors.ErrInvalidRequest
 	}
 
 	if offset < 0 {
@@ -73,13 +71,13 @@ func (s *LunchService) GetLunches(ctx context.Context, userID int64, offset, lim
 	}
 
 	lunchID, err := s.lunchRepo.GetLunchIdByUserID(ctx, userID)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
-		return nil, 0, errors.New("error lunchRepo: GetLunchIdByUserID")
+	if err != nil && !goerrors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, 0, errors.NewErrRepository("lunchRepo", "GetLunchIdByUserID", err)
 	}
 
 	lunches, err := s.lunchRepo.GetLunches(ctx, userID, offset, limit)
 	if err != nil {
-		return nil, 0, errors.New("error lunchRepo: GetLunches")
+		return nil, 0, errors.NewErrRepository("lunchRepo", "GetLunches", err)
 	}
 
 	return lunches, lunchID, nil

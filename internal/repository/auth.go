@@ -2,11 +2,11 @@ package repository
 
 import (
 	"context"
-	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/t-lunch/t-lunch-backend/internal/config"
+	"github.com/t-lunch/t-lunch-backend/internal/errors"
 	"github.com/t-lunch/t-lunch-backend/internal/models"
 )
 
@@ -35,14 +35,14 @@ func (r *AuthRepository) GenerateToken(ctx context.Context, id int64, tokenType 
 	case models.Refresh:
 		payload["exp"] = time.Now().Add(r.refreshExpiration).Unix()
 	default:
-		return "", errors.New("unknown token type")
+		return "", errors.ErrUnknownTokenType
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
 	return token.SignedString([]byte(r.secret))
 }
 
-func (r *AuthRepository) ValidateToken(ctx context.Context, token string) (int64, bool) {
+func (r *AuthRepository) GetToken(ctx context.Context, token string) (jwt.MapClaims, error) {
 	jwtToken, err := jwt.ParseWithClaims(
 		token,
 		jwt.MapClaims{},
@@ -51,17 +51,13 @@ func (r *AuthRepository) ValidateToken(ctx context.Context, token string) (int64
 		},
 	)
 	if err != nil {
-		return -1, false
+		return nil, errors.ErrInvalidToken
 	}
 
 	payload, ok := jwtToken.Claims.(jwt.MapClaims)
 	if !ok {
-		return -2, ok
+		return nil, errors.ErrInvalidToken
 	}
 
-	if int64(payload["exp"].(float64)) < time.Now().Unix() {
-		return -3, false
-	}
-
-	return int64(payload["id"].(float64)), true
+	return payload, nil
 }

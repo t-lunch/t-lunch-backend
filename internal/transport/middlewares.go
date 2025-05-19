@@ -15,7 +15,12 @@ func AuthMiddleware(protectedURL []string) runtime.Middleware {
 				authHeader := r.Header.Get("Authorization")
 				fmt.Println(authHeader)
 				if authHeader == "" {
-					http.Error(w, "missing auth token", http.StatusUnauthorized)
+					w.WriteHeader(http.StatusUnauthorized)
+					w.Write([]byte(`
+					{
+						"Message": "missing auth token"
+					}
+					`))
 					return
 				}
 			}
