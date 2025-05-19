@@ -138,7 +138,3 @@ func ValidTime(ctx context.Context, now, lunchTime time.Time) bool {
 	endLunchTime := time.Date(now.Year(), now.Month(), now.Day(), 14, 0, 0, 0, now.Location())
 	return !lunchTime.Before(beginLunchTime) && !lunchTime.After(endLunchTime)
 }
-
-// func (s *TlunchService) GetLunchHistory(ctx context.Context, lunchID int64) (float64, error) {
-// 	return s.lunchRepo.GetLunchHistory(ctx, lunchID)
-// }

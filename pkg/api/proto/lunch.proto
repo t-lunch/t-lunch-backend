@@ -37,7 +37,7 @@ service Tlunch {
 
     rpc ChangeProfile (User) returns (User) {
         option (google.api.http) = {
-            patch: "/v1/profile/{user_id}"
+            put: "/v1/profile/{user_id}"
             body: "*"
         };
     }

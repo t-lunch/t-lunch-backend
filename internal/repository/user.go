@@ -60,3 +60,22 @@ func (r *UserRepository) GetUsersByIDs(ctx context.Context, ids []int64) ([]*mod
 
 	return users, nil
 }
+
+func (r *UserRepository) GetUserByID(ctx context.Context, id int64) (*models.UserResponse, error) {
+	var user models.UserResponse
+	err := r.db.WithContext(ctx).
+		Model(&models.User{}).
+		First(&user, id).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
+}
+
+func (r *UserRepository) UpdateUserByID(ctx context.Context, id int64, updates map[string]interface{}) error {
+	return r.db.WithContext(ctx).
+		Model(&models.User{}).
+		Where("id = ?", id).
+		Updates(updates).Error
+}

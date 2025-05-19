@@ -12,12 +12,14 @@ type TLunchServer struct {
 	tlunch.UnimplementedTlunchServer
 	AuthTransport  *AuthTransport
 	LunchTransport *LunchTransport
+	UserTransport  *UserTransport
 }
 
 func NewTLunchServer(services *service.TLunchServices, zapLogger *zap.Logger) *TLunchServer {
 	return &TLunchServer{
 		AuthTransport:  NewAuthTransport(services.AuthService, zapLogger),
 		LunchTransport: NewLunchTransport(services.LunchService, services.UserService, zapLogger),
+		UserTransport:  NewUserTransport(services.UserService, zapLogger),
 	}
 }
 
@@ -51,4 +53,12 @@ func (t *TLunchServer) JoinLunch(ctx context.Context, request *tlunch.ActionLunc
 
 func (t *TLunchServer) LeaveLunch(ctx context.Context, request *tlunch.ActionLunchRequest) (*tlunch.LunchResponse, error) {
 	return t.LunchTransport.LeaveLunch(ctx, request)
+}
+
+func (t *TLunchServer) GetProfile(ctx context.Context, request *tlunch.UserRequest) (*tlunch.User, error) {
+	return t.UserTransport.GetProfile(ctx, request)
+}
+
+func (t *TLunchServer) ChangeProfile(ctx context.Context, request *tlunch.User) (*tlunch.User, error) {
+	return t.UserTransport.ChangeProfile(ctx, request)
 }
