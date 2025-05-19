@@ -22,7 +22,7 @@ var cfgName string = "lunch"
 func main() {
 	zapLogger, err := logger.NewZapLogger()
 	if err != nil {
-		fmt.Printf("error NewZapLogger: %v\n", err)
+		fmt.Printf("failed to create new logger: %v\n", err)
 		return
 	}
 
@@ -30,7 +30,7 @@ func main() {
 
 	cfg, err := config.NewConfig(cfgName)
 	if err != nil {
-		zapLogger.Error("error NewConfig", zap.Error(err))
+		zapLogger.Error("failed to initialize config", zap.Error(err))
 		return
 	}
 
@@ -39,13 +39,13 @@ func main() {
 		fmt.Sprintf("host=postgres user=%s password=%s dbname=%s port=%s sslmode=disable", cfg.Database.User, cfg.Database.Password, cfg.Database.DBName, cfg.Database.Port),
 	)
 	if err != nil {
-		zapLogger.Error("error NewGormDB", zap.Error(err))
+		zapLogger.Error("failed to connect to DB", zap.Error(err))
 		return
 	}
 
 	repos, err := repository.NewTLunchRepos(cfg, gormDB)
 	if err != nil {
-		zapLogger.Error("error NewTLunchRepos", zap.Error(err))
+		zapLogger.Error("failed to initialize TLunch repositories", zap.Error(err))
 		return
 	}
 	services := service.NewTLunchServices(repos)
