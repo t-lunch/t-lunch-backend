@@ -15,6 +15,8 @@ type LunchService interface {
 	CreateLunch(ctx context.Context, userID int64, place string, lunchTime time.Time, description string) (*models.Lunch, error)
 	GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, int64, error)
 	GetLunchByID(ctx context.Context, lunchID int64) (*models.Lunch, error)
+	JoinLunch(ctx context.Context, lunchID, userID int64) (*models.Lunch, error)
+	LeaveLunch(ctx context.Context, lunchID, userID int64) (*models.Lunch, error)
 }
 
 type UserService interface {
@@ -177,4 +179,64 @@ func (t *LunchTransport) GetDetailLunch(ctx context.Context, request *tlunch.Det
 	t.zapLogger.Info("GetDetailLunch success", zap.Int64("lunch_id", request.GetLunchId()), zap.Int("users_count", len(users)))
 
 	return response, nil
+}
+
+func (t *LunchTransport) JoinLunch(ctx context.Context, request *tlunch.ActionLunchRequest) (*tlunch.LunchResponse, error) {
+	t.zapLogger.Info("JoinLunch request", zap.Int64("user_id", request.GetUserId()), zap.Int64("lunch_id", request.GetLunchId()))
+
+	response, err := t.lunchService.JoinLunch(ctx, request.GetLunchId(), request.GetUserId())
+	if err != nil {
+		t.zapLogger.Error("JoinLunch failed", zap.Error(err))
+		return nil, err
+	}
+
+	rsafe := pointer.Get(response)
+	t.zapLogger.Info("JoinLunch success", zap.Int64("user_id", request.GetUserId()), zap.Int64("lunch_id", request.GetLunchId()))
+
+	var description *string = nil
+	if rsafe.Description != "" {
+		description = &rsafe.Description
+	}
+	return &tlunch.LunchResponse{
+		Lunch: &tlunch.Lunch{
+			Id:                   rsafe.ID,
+			Name:                 rsafe.Creator.Name,
+			Surname:              rsafe.Creator.Surname,
+			Place:                rsafe.Place,
+			Time:                 timestamppb.New(rsafe.Time),
+			NumberOfParticipants: rsafe.NumberOfParticipants,
+			Description:          description,
+			UsersId:              rsafe.Participants,
+		},
+	}, nil
+}
+
+func (t *LunchTransport) LeaveLunch(ctx context.Context, request *tlunch.ActionLunchRequest) (*tlunch.LunchResponse, error) {
+	t.zapLogger.Info("LeaveLunch request", zap.Int64("user_id", request.GetUserId()), zap.Int64("lunch_id", request.GetLunchId()))
+
+	response, err := t.lunchService.LeaveLunch(ctx, request.GetLunchId(), request.GetUserId())
+	if err != nil {
+		t.zapLogger.Error("LeaveLunch failed", zap.Error(err))
+		return nil, err
+	}
+
+	rsafe := pointer.Get(response)
+	t.zapLogger.Info("LeaveLunch success", zap.Int64("user_id", request.GetUserId()), zap.Int64("lunch_id", request.GetLunchId()))
+
+	var description *string = nil
+	if rsafe.Description != "" {
+		description = &rsafe.Description
+	}
+	return &tlunch.LunchResponse{
+		Lunch: &tlunch.Lunch{
+			Id:                   rsafe.ID,
+			Name:                 rsafe.Creator.Name,
+			Surname:              rsafe.Creator.Surname,
+			Place:                rsafe.Place,
+			Time:                 timestamppb.New(rsafe.Time),
+			NumberOfParticipants: rsafe.NumberOfParticipants,
+			Description:          description,
+			UsersId:              rsafe.Participants,
+		},
+	}, nil
 }

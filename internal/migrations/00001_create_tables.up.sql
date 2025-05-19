@@ -40,6 +40,43 @@ BEFORE INSERT OR UPDATE ON lunches
 FOR EACH ROW
 EXECUTE FUNCTION check_participants_exist();
 
+-- Function to update number_of_participants based on participants array length
+CREATE OR REPLACE FUNCTION update_number_of_participants()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.number_of_participants := cardinality(NEW.participants);
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to call the update function before insert or update
+CREATE TRIGGER trg_update_number_of_participants
+BEFORE INSERT OR UPDATE ON lunches
+FOR EACH ROW
+EXECUTE FUNCTION update_number_of_participants();
+
+-- Function to check for unique participants in the array
+CREATE OR REPLACE FUNCTION check_unique_participants()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (
+        SELECT COUNT(*)
+        FROM unnest(NEW.participants) AS p
+        GROUP BY p
+        HAVING COUNT(*) > 1
+    ) > 0 THEN
+        RAISE EXCEPTION 'Duplicate userIDs found in participants array';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to call the uniqueness check function before insert or update
+CREATE TRIGGER trg_check_unique_participants
+BEFORE INSERT OR UPDATE ON lunches
+FOR EACH ROW
+EXECUTE FUNCTION check_unique_participants();
+
 
 CREATE TABLE IF NOT EXISTS histories (
     id BIGSERIAL PRIMARY KEY,

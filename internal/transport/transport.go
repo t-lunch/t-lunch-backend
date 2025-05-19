@@ -44,3 +44,11 @@ func (t *TLunchServer) GetLunches(ctx context.Context, request *tlunch.LunchRequ
 func (t *TLunchServer) GetDetailLunch(ctx context.Context, request *tlunch.DetailLunchRequest) (*tlunch.DetailLunchResponse, error) {
 	return t.LunchTransport.GetDetailLunch(ctx, request)
 }
+
+func (t *TLunchServer) JoinLunch(ctx context.Context, request *tlunch.ActionLunchRequest) (*tlunch.LunchResponse, error) {
+	return t.LunchTransport.JoinLunch(ctx, request)
+}
+
+func (t *TLunchServer) LeaveLunch(ctx context.Context, request *tlunch.ActionLunchRequest) (*tlunch.LunchResponse, error) {
+	return t.LunchTransport.LeaveLunch(ctx, request)
+}
