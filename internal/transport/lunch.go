@@ -14,17 +14,24 @@ import (
 type LunchService interface {
 	CreateLunch(ctx context.Context, userID int64, place string, lunchTime time.Time, description string) (*models.Lunch, error)
 	GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, int64, error)
+	GetLunchByID(ctx context.Context, lunchID int64) (*models.Lunch, error)
+}
+
+type UserService interface {
+	GetUsersByIDs(ctx context.Context, userIDs []int64) ([]*models.UserResponse, error)
 }
 
 type LunchTransport struct {
 	tlunch.UnimplementedTlunchServer
 	lunchService LunchService
+	userService  UserService
 	zapLogger    *zap.Logger
 }
 
-func NewLunchTransport(lunchService LunchService, zapLogger *zap.Logger) *LunchTransport {
+func NewLunchTransport(lunchService LunchService, userService UserService, zapLogger *zap.Logger) *LunchTransport {
 	return &LunchTransport{
 		lunchService: lunchService,
+		userService:  userService,
 		zapLogger:    zapLogger,
 	}
 }
@@ -118,4 +125,56 @@ func (t *LunchTransport) GetLunches(ctx context.Context, request *tlunch.LunchRe
 	t.zapLogger.Info("GetLunches success", zap.Int("lunches_count", len(response)))
 
 	return lunchesResponse, nil
+}
+
+func (t *LunchTransport) GetDetailLunch(ctx context.Context, request *tlunch.DetailLunchRequest) (*tlunch.DetailLunchResponse, error) {
+	t.zapLogger.Info("GetDetailLunch request", zap.Int64("lunch_id", request.GetLunchId()), zap.Int64s("user_id", request.GetUsersId()))
+
+	lunch, err := t.lunchService.GetLunchByID(ctx, request.GetLunchId())
+	if err != nil {
+		t.zapLogger.Error("GetDetailLunch failed", zap.Error(err))
+		return nil, err
+	}
+
+	users, err := t.userService.GetUsersByIDs(ctx, request.GetUsersId())
+	if err != nil {
+		t.zapLogger.Error("GetDetailLunch failed", zap.Error(err))
+		return nil, err
+	}
+
+	rsafe := pointer.Get(lunch)
+	var description *string = nil
+	if rsafe.Description != "" {
+		description = &rsafe.Description
+	}
+
+	response := &tlunch.DetailLunchResponse{
+		Lunch: &tlunch.Lunch{
+			Id:                   rsafe.ID,
+			Name:                 rsafe.Creator.Name,
+			Surname:              rsafe.Creator.Surname,
+			Place:                rsafe.Place,
+			Time:                 timestamppb.New(rsafe.Time),
+			NumberOfParticipants: rsafe.NumberOfParticipants,
+			Description:          description,
+			UsersId:              rsafe.Participants,
+		},
+		Users: make([]*tlunch.User, len(users)),
+	}
+
+	for i, user := range users {
+		rsafe := pointer.Get(user)
+		response.Users[i] = &tlunch.User{
+			UserId:  rsafe.ID,
+			Name:    rsafe.Name,
+			Surname: rsafe.Surname,
+			Tg:      rsafe.Tg,
+			Office:  rsafe.Office,
+			Emoji:   rsafe.Emoji,
+		}
+	}
+
+	t.zapLogger.Info("GetDetailLunch success", zap.Int64("lunch_id", request.GetLunchId()), zap.Int("users_count", len(users)))
+
+	return response, nil
 }

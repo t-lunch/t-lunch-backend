@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 
+	"github.com/lib/pq"
 	"github.com/t-lunch/t-lunch-backend/internal/models"
 	"gorm.io/gorm"
 )
@@ -43,4 +44,19 @@ func (r *UserRepository) IsUserWithEmailExist(ctx context.Context, email string)
 	}
 
 	return count > 0, nil
+}
+
+func (r *UserRepository) GetUsersByIDs(ctx context.Context, ids []int64) ([]*models.UserResponse, error) {
+	pqIDs := pq.Int64Array(ids)
+
+	var users []*models.UserResponse
+	err := r.db.WithContext(ctx).
+		Model(&models.User{}).
+		Where("id = ANY(?)", pqIDs).
+		Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return users, nil
 }
