@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/t-lunch/t-lunch-backend/internal/models"
 	"gorm.io/gorm"
@@ -58,12 +59,42 @@ func (r *LunchRepository) GetLunchIdByUserID(ctx context.Context, userID int64) 
 	return lunch.ID, nil
 }
 
-func (r *LunchRepository) UpdateLunchParticipants(ctx context.Context, method string, lunchID, userID int64) error {
+func (r *LunchRepository) UpdateLunchParticipants(ctx context.Context, method models.UpdateAction, lunchID, userID int64) error {
 	expr := fmt.Sprintf("%s(participants, ?)", method)
 	err := r.db.WithContext(ctx).
 		Model(&models.Lunch{}).
 		Where("id = ?", lunchID).
 		Update("participants", gorm.Expr(expr, userID)).Error
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *LunchRepository) GetUsersLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, error) {
+	var lunches []*models.Lunch
+	err := r.db.WithContext(ctx).
+		Where("? = ANY(participants)", userID).
+		Where("time < ?", time.Now()).
+		Preload("Creator").
+		Order("time DESC").
+		Offset(offset).
+		Limit(limit).
+		Find(&lunches).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return lunches, nil
+}
+
+func (r *LunchRepository) UpdateLunchLikedBy(ctx context.Context, method models.UpdateAction, lunchID, userID int64) error {
+	expr := fmt.Sprintf("%s(liked_by, ?)", method)
+	err := r.db.WithContext(ctx).
+		Model(&models.Lunch{}).
+		Where("id = ?", lunchID).
+		Update("liked_by", gorm.Expr(expr, userID)).Error
 	if err != nil {
 		return err
 	}

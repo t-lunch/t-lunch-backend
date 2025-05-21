@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS lunches (
     description TEXT,
     participants BIGINT[] NOT NULL,
     number_of_participants BIGINT NOT NULL,
+    liked_by BIGINT[] NOT NULL,
     FOREIGN KEY (creator_id) REFERENCES users(id)
 );
 
@@ -78,11 +79,43 @@ FOR EACH ROW
 EXECUTE FUNCTION check_unique_participants();
 
 
-CREATE TABLE IF NOT EXISTS histories (
-    id BIGSERIAL PRIMARY KEY,
-    user_id BIGINT NOT NULL,
-    lunch_id BIGINT NOT NULL,
-    is_liked BOOLEAN DEFAULT FALSE,
-    FOREIGN KEY (user_id) REFERENCES users(id),
-    FOREIGN KEY (lunch_id) REFERENCES lunches(id)
-);
+CREATE OR REPLACE FUNCTION check_liked_by_exist()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF EXISTS (
+        SELECT 1
+        FROM unnest(NEW.liked_by) AS p
+        WHERE p NOT IN (SELECT id FROM users)
+    ) THEN
+        RAISE EXCEPTION 'One or more liked_by do not exist in the users table';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_check_liked_by
+BEFORE INSERT OR UPDATE ON lunches
+FOR EACH ROW
+EXECUTE FUNCTION check_liked_by_exist();
+
+-- Function to check for unique liked_by in the array
+CREATE OR REPLACE FUNCTION check_unique_liked_by()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF (
+        SELECT COUNT(*)
+        FROM unnest(NEW.liked_by) AS p
+        GROUP BY p
+        HAVING COUNT(*) > 1
+    ) > 0 THEN
+        RAISE EXCEPTION 'Duplicate userIDs found in liked_by array';
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to call the uniqueness check function before insert or update
+CREATE TRIGGER trg_check_unique_liked_by
+BEFORE INSERT OR UPDATE ON lunches
+FOR EACH ROW
+EXECUTE FUNCTION check_unique_liked_by();

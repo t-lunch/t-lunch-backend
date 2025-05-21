@@ -62,3 +62,11 @@ func (t *TLunchServer) GetProfile(ctx context.Context, request *tlunch.UserReque
 func (t *TLunchServer) ChangeProfile(ctx context.Context, request *tlunch.User) (*tlunch.User, error) {
 	return t.UserTransport.ChangeProfile(ctx, request)
 }
+
+func (t *TLunchServer) GetLunchHistory(ctx context.Context, request *tlunch.LunchRequest) (*tlunch.LunchHistoryResponse, error) {
+	return t.LunchTransport.GetLunchHistory(ctx, request)
+}
+
+func (t *TLunchServer) RateLunch(ctx context.Context, request *tlunch.RateLunchRequest) (*tlunch.LunchFeedback, error) {
+	return t.LunchTransport.RateLunch(ctx, request)
+}

@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	goerrors "errors"
+	"slices"
 	"time"
 
 	"github.com/t-lunch/t-lunch-backend/internal/errors"
@@ -15,7 +16,9 @@ type LunchRepo interface {
 	GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, error)
 	GetLunchByID(ctx context.Context, id int64) (*models.Lunch, error)
 	GetLunchIdByUserID(ctx context.Context, userID int64) (int64, error)
-	UpdateLunchParticipants(ctx context.Context, method string, lunchID, userID int64) error
+	UpdateLunchParticipants(ctx context.Context, method models.UpdateAction, lunchID, userID int64) error
+	GetUsersLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, error)
+	UpdateLunchLikedBy(ctx context.Context, method models.UpdateAction, lunchID, userID int64) error
 }
 
 type LunchService struct {
@@ -41,6 +44,7 @@ func (s *LunchService) CreateLunch(ctx context.Context, userID int64, place stri
 		NumberOfParticipants: 1,
 		Description:          description,
 		Participants:         []int64{userID},
+		LikedBy:              []int64{},
 	}
 
 	err := s.lunchRepo.CreateLunch(ctx, lunch)
@@ -102,7 +106,7 @@ func (s *LunchService) JoinLunch(ctx context.Context, lunchID, userID int64) (*m
 		return nil, errors.ErrInvalidRequest
 	}
 
-	err := s.lunchRepo.UpdateLunchParticipants(ctx, "array_append", lunchID, userID)
+	err := s.lunchRepo.UpdateLunchParticipants(ctx, models.Add, lunchID, userID)
 	if err != nil {
 		return nil, errors.NewErrRepository("lunchRepo", "UpdateLunchParticipants", err)
 	}
@@ -120,7 +124,7 @@ func (s *LunchService) LeaveLunch(ctx context.Context, lunchID, userID int64) (*
 		return nil, errors.ErrInvalidRequest
 	}
 
-	err := s.lunchRepo.UpdateLunchParticipants(ctx, "array_remove", lunchID, userID)
+	err := s.lunchRepo.UpdateLunchParticipants(ctx, models.Del, lunchID, userID)
 	if err != nil {
 		return nil, errors.NewErrRepository("lunchRepo", "UpdateLunchParticipants", err)
 	}
@@ -131,6 +135,65 @@ func (s *LunchService) LeaveLunch(ctx context.Context, lunchID, userID int64) (*
 	}
 
 	return updatedLunch, nil
+}
+
+func (s *LunchService) GetLunchHistory(ctx context.Context, userID int64, offset, limit int) ([]*models.LunchFeedback, error) {
+	if userID <= 0 {
+		return nil, errors.ErrInvalidRequest
+	}
+
+	if offset < 0 {
+		offset = 0
+	}
+	if limit <= 0 {
+		limit = 5
+	}
+	if limit > 10 {
+		limit = 10
+	}
+
+	lunches, err := s.lunchRepo.GetUsersLunches(ctx, userID, offset, limit)
+	if err != nil {
+		return nil, errors.NewErrRepository("lunchRepo", "GetUsersLunches", err)
+	}
+
+	lunchesFeedback := make([]*models.LunchFeedback, len(lunches))
+	for i, lunch := range lunches {
+		lunchesFeedback[i] = &models.LunchFeedback{
+			Lunch:   lunch,
+			IsLiked: slices.Contains(lunch.LikedBy, userID),
+		}
+	}
+
+	return lunchesFeedback, nil
+}
+
+func (s *LunchService) RateLunch(ctx context.Context, userID, lunchID int64, isLiked bool) (*models.LunchFeedback, error) {
+	if userID <= 0 || lunchID <= 0 {
+		return nil, errors.ErrInvalidRequest
+	}
+
+	var action models.UpdateAction
+	if isLiked {
+		action = models.Add
+	} else {
+		action = models.Del
+	}
+
+	err := s.lunchRepo.UpdateLunchLikedBy(ctx, action, lunchID, userID)
+	if err != nil {
+		return nil, errors.NewErrRepository("lunchRepo", "UpdateLunchLikedBy", err)
+	}
+
+	ratedLunch, err := s.lunchRepo.GetLunchByID(ctx, lunchID)
+	if err != nil {
+		return nil, errors.NewErrRepository("lunchRepo", "GetLunchByID", err)
+	}
+
+	return &models.LunchFeedback{
+		Lunch:   ratedLunch,
+		IsLiked: slices.Contains(ratedLunch.LikedBy, userID),
+	}, nil
 }
 
 func ValidTime(ctx context.Context, now, lunchTime time.Time) bool {

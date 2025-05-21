@@ -17,6 +17,8 @@ type LunchService interface {
 	GetLunchByID(ctx context.Context, lunchID int64) (*models.Lunch, error)
 	JoinLunch(ctx context.Context, lunchID, userID int64) (*models.Lunch, error)
 	LeaveLunch(ctx context.Context, lunchID, userID int64) (*models.Lunch, error)
+	GetLunchHistory(ctx context.Context, userID int64, offset, limit int) ([]*models.LunchFeedback, error)
+	RateLunch(ctx context.Context, userID, lunchID int64, isLiked bool) (*models.LunchFeedback, error)
 }
 
 type LunchTransport struct {
@@ -234,5 +236,95 @@ func (t *LunchTransport) LeaveLunch(ctx context.Context, request *tlunch.ActionL
 			Description:          description,
 			UsersId:              rsafe.Participants,
 		},
+	}, nil
+}
+
+func (t *LunchTransport) GetLunchHistory(ctx context.Context, request *tlunch.LunchRequest) (*tlunch.LunchHistoryResponse, error) {
+	t.zapLogger.Info("GetLunchHistory request",
+		zap.Int64("user_id", request.GetUserId()),
+		zap.Int32("offset", request.GetOffset()),
+		zap.Int32("limit", request.GetLimit()),
+	)
+
+	histories, err := t.lunchService.GetLunchHistory(
+		ctx,
+		request.GetUserId(),
+		int(request.GetOffset()),
+		int(request.GetLimit()),
+	)
+	if err != nil {
+		t.zapLogger.Error("GetLunchHistory failed", zap.Error(err))
+		return nil, err
+	}
+
+	lunchesFeedback := make([]*tlunch.LunchFeedback, len(histories))
+	for i, history := range histories {
+		rsafeHistory := pointer.Get(history)
+		rsafeLunch := pointer.Get(history.Lunch)
+
+		var description *string = nil
+		if rsafeLunch.Description != "" {
+			description = &rsafeLunch.Description
+		}
+		lunchesFeedback[i] = &tlunch.LunchFeedback{
+			Lunch: &tlunch.Lunch{
+				Id:                   rsafeLunch.ID,
+				Name:                 rsafeLunch.Creator.Name,
+				Surname:              rsafeLunch.Creator.Surname,
+				Place:                rsafeLunch.Place,
+				Time:                 timestamppb.New(rsafeLunch.Time),
+				NumberOfParticipants: rsafeLunch.NumberOfParticipants,
+				Description:          description,
+				UsersId:              rsafeLunch.Participants,
+			},
+			IsLiked: rsafeHistory.IsLiked,
+		}
+	}
+
+	t.zapLogger.Info("GetLunchHistory success", zap.Int("histories_count", len(histories)))
+
+	return &tlunch.LunchHistoryResponse{
+		Lunches: lunchesFeedback,
+	}, nil
+}
+
+func (t *LunchTransport) RateLunch(ctx context.Context, request *tlunch.RateLunchRequest) (*tlunch.LunchFeedback, error) {
+	t.zapLogger.Info("RateLunch request",
+		zap.Int64("user_id", request.GetUserId()),
+		zap.Int64("lunch_id", request.GetLunchId()),
+		zap.Bool("is_liked", request.GetIsLiked()),
+	)
+
+	response, err := t.lunchService.RateLunch(ctx, request.GetUserId(), request.GetLunchId(), request.GetIsLiked())
+	if err != nil {
+		t.zapLogger.Error("RateLunch failed", zap.Error(err))
+		return nil, err
+	}
+
+	rsafe := pointer.Get(response)
+	rsafeLunch := pointer.Get(rsafe.Lunch)
+
+	t.zapLogger.Info("RateLunch success",
+		zap.Int64("user_id", request.GetUserId()),
+		zap.Int64("lunch_id", rsafeLunch.ID),
+		zap.Bool("is_liked", rsafe.IsLiked),
+	)
+
+	var description *string = nil
+	if rsafeLunch.Description != "" {
+		description = &rsafeLunch.Description
+	}
+	return &tlunch.LunchFeedback{
+		Lunch: &tlunch.Lunch{
+			Id:                   rsafeLunch.ID,
+			Name:                 rsafeLunch.Creator.Name,
+			Surname:              rsafeLunch.Creator.Surname,
+			Place:                rsafeLunch.Place,
+			Time:                 timestamppb.New(rsafeLunch.Time),
+			NumberOfParticipants: rsafeLunch.NumberOfParticipants,
+			Description:          description,
+			UsersId:              rsafeLunch.Participants,
+		},
+		IsLiked: rsafe.IsLiked,
 	}, nil
 }
