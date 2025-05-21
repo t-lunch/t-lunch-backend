@@ -11,7 +11,7 @@ import (
 
 type AuthService interface {
 	Register(ctx context.Context, user *models.User) (*models.User, error)
-	Login(ctx context.Context, email, password string) (string, string, error)
+	Login(ctx context.Context, email, password string) (string, string, int64, error)
 	Refresh(ctx context.Context, token string, userId int64) (string, error)
 }
 
@@ -63,7 +63,7 @@ func (t *AuthTransport) Register(ctx context.Context, request *tlunch.RegisterRe
 func (t *AuthTransport) Login(ctx context.Context, request *tlunch.LoginRequest) (*tlunch.LoginResponse, error) {
 	t.zapLogger.Info("Login request", zap.String("email", request.GetEmail()))
 
-	accessToken, refreshToken, err := t.authService.Login(ctx, request.GetEmail(), request.GetPassword())
+	accessToken, refreshToken, userID, err := t.authService.Login(ctx, request.GetEmail(), request.GetPassword())
 	if err != nil {
 		t.zapLogger.Error("Login failed", zap.Error(err))
 		return nil, err
@@ -74,6 +74,7 @@ func (t *AuthTransport) Login(ctx context.Context, request *tlunch.LoginRequest)
 	return &tlunch.LoginResponse{
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
+		UserId:       userID,
 	}, nil
 }
 

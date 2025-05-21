@@ -54,31 +54,31 @@ func (s *AuthService) Register(ctx context.Context, user *models.User) (*models.
 	return user, nil
 }
 
-func (s *AuthService) Login(ctx context.Context, email, password string) (string, string, error) {
+func (s *AuthService) Login(ctx context.Context, email, password string) (string, string, int64, error) {
 	if email == "" || password == "" {
-		return "", "", errors.ErrInvalidRequest
+		return "", "", 0, errors.ErrInvalidRequest
 	}
 
 	id, hashedPassword, err := s.userRepo.GetUserPasswordByEmail(ctx, email)
 	if err != nil {
-		return "", "", errors.NewErrRepository("userRepo", "GetUserPasswordByEmail", err)
+		return "", "", 0, errors.NewErrRepository("userRepo", "GetUserPasswordByEmail", err)
 	}
 
 	if bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password)) != nil {
-		return "", "", errors.NewErrRepository("bcrypt", "CompareHashAndPassword", errors.ErrInvalidPassword)
+		return "", "", 0, errors.NewErrRepository("bcrypt", "CompareHashAndPassword", errors.ErrInvalidPassword)
 	}
 
 	accessToken, err := s.authRepo.GenerateToken(ctx, id, models.Access)
 	if err != nil {
-		return "", "", errors.NewErrRepository("authRepo", "GenerateToken access", err)
+		return "", "", 0, errors.NewErrRepository("authRepo", "GenerateToken access", err)
 	}
 
 	refreshToken, err := s.authRepo.GenerateToken(ctx, id, models.Refresh)
 	if err != nil {
-		return "", "", errors.NewErrRepository("authRepo", "GenerateToken refresh", err)
+		return "", "", 0, errors.NewErrRepository("authRepo", "GenerateToken refresh", err)
 	}
 
-	return accessToken, refreshToken, nil
+	return accessToken, refreshToken, id, nil
 }
 
 func (s *AuthService) Refresh(ctx context.Context, token string, userId int64) (string, error) {
