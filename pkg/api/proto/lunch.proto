@@ -116,6 +116,7 @@ message LoginRequest {
 message LoginResponse {
     string access_token = 1;
     string refresh_token = 2;
+    int64 user_id = 3;
 }
 
 message RefreshRequest {
