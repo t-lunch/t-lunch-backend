@@ -6,6 +6,11 @@ import (
 )
 
 var (
+	ErrInternalServerError = errors.New("internal server error")
+	ErrMissingAuthToken    = errors.New("missing auth token")
+)
+
+var (
 	ErrConfigIsNil      = errors.New("config is nil")
 	ErrDBIsNil          = errors.New("db is nil")
 	ErrUnknownTokenType = errors.New("unknown token type")

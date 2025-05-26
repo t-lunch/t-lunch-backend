@@ -50,7 +50,7 @@ func main() {
 	}
 	services := service.NewTLunchServices(repos)
 	transports := transport.NewTLunchServer(services, zapLogger)
-	server := app.NewServer(cfg.Server.HTTPPort, cfg.ProtectedUrl, transports)
+	server := app.NewServer(cfg.Server.HTTPPort, cfg.ProtectedUrl, cfg.Jwt.Secret, transports)
 
 	gracefulShutdown := make(chan os.Signal, 1)
 	signal.Notify(gracefulShutdown, syscall.SIGTERM, syscall.SIGINT)
