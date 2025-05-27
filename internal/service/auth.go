@@ -10,6 +10,8 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+//go:generate mockgen -destination=./mocks/auth.go -package=mocks . AuthRepo
+
 type AuthRepo interface {
 	GenerateToken(ctx context.Context, id int64, tokenType models.TokenType) (string, error)
 	GetToken(ctx context.Context, token string) (jwt.MapClaims, error)
