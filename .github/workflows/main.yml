@@ -9,73 +9,55 @@ on:
       - main
 
 jobs:
-  build:
+  lint:
     runs-on: ubuntu-latest
-    env:
-      DATABASE_URL: postgres://testuser:testpass@localhost:5432/testdb
-    services:
-      postgres:
-        image: postgres:13
-        env:
-          POSTGRES_USER: testuser
-          POSTGRES_PASSWORD: testpass
-          POSTGRES_DB: testdb
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
     steps:
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
       - name: Set up Go
-        uses: actions/setup-go@v2
+        uses: actions/setup-go@v5
         with:
-          go-version: '1.17'
+          go-version: '1.23.2'
 
-      - name: Install protoc
-        uses: arduino/setup-protoc@v1
+      - name: golangci-lint
+        uses: golangci/golangci-lint-action@v8
+
+  test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
         with:
-          version: '3.19.4'
+          go-version: '1.23.2'
 
-      - name: Install protoc-gen-go
-        run: go install google.golang.org/protobuf/cmd/protoc-gen-go@latest
+      - name: Get dependencies
+        run: go mod download
 
-      - name: Install protoc-gen-go-grpc
-        run: go install google.golang.org/grpc/cmd/protoc-gen-go-grpc@latest
+      - name: Test
+        run: go test ./... -v -cover
 
-      - name: Generate proto code
-        run: |
-          protoc --go_out=pkg/api/generated --go_opt=paths=source_relative \
-                 --go-grpc_out=pkg/api/generated --go_grpc_opt=paths=source_relative \
-                 api/proto/*.proto
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-      - name: Tidy dependencies
-        run: go mod tidy
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.23.2'
 
-      - name: Install golangci-lint
-        run: |
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.42.1
+      - name: Get dependencies
+        run: go mod download
 
-      - name: Run golangci-lint
-        run: golangci-lint run
+      - name: Build migrator
+        run: go build -o migrator ./cmd/migrator/main.go
 
-      - name: Vet code
-        run: go vet ./...
-
-      - name: Install migrate
-        run: |
-          curl -L https://github.com/golang-migrate/migrate/releases/download/v4.14.1/migrate.linux-amd64.tar.gz | tar xvz
-          mv migrate.linux-amd64 /usr/local/bin/migrate
-
-      - name: Run migrations
-        run: migrate -path migrations -database $DATABASE_URL up
-
-      - name: Run tests
-        run: go test ./...
-
-      - name: Build binary
-        run: go build -o t-lunch-backend ./cmd/main.go
+      - name: Build app
+        run: go build -o t-lunch-backend ./cmd/main/main.go
