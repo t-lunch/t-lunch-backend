@@ -63,3 +63,11 @@ jobs:
 
       - name: Build app
         run: go build -o t-lunch-backend ./cmd/main/main.go
+        
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            migrator
+            t-lunch-backend
