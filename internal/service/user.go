@@ -8,6 +8,8 @@ import (
 	"github.com/t-lunch/t-lunch-backend/internal/models"
 )
 
+//go:generate mockgen -destination=./mocks/user.go -package=mocks . UserRepo
+
 type UserRepo interface {
 	CreateUser(ctx context.Context, user *models.User) error
 	GetUserPasswordByEmail(ctx context.Context, email string) (int64, string, error)

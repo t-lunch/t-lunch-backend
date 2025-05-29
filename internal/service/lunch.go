@@ -11,6 +11,8 @@ import (
 	"gorm.io/gorm"
 )
 
+//go:generate mockgen -destination=./mocks/lunch.go -package=mocks . LunchRepo
+
 type LunchRepo interface {
 	CreateLunch(ctx context.Context, lunch *models.Lunch) error
 	GetLunches(ctx context.Context, userID int64, offset, limit int) ([]*models.Lunch, error)
